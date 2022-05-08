@@ -4,6 +4,8 @@ import os
 import logging
 import glob 
 import librosa 
+from argparse import ArgumentParser
+
 
 
 class ProcessTimit:
@@ -55,6 +57,28 @@ class ProcessTimit:
                     utterances.append([mel_spec[:,-self.frame:]])
         return np.array(utterances)
                 
+if __name__ == "__main__":
+
+    parser = ArgumentParser(description="argument parser for TIMIT")
+    parser.add_argument("--directory", type=str, help="Directory with files")
+    parser.add_argument("--output", type=str, help="Directory to write output files")
+    parser.add_argument("--sampling_rate", type=int, help="Sampling rate", default=16000)
+    parser.add_argument("--num_dilects", type=int, help="Number of dialects to process", default=1)
+    parser.add_argument("--hop_length", type=int, help="Hop length for STFT", default=440)
+    parser.add_argument("--win_length", type=int, help="Window length for STFT", default=440)
+    parser.add_argument("--frames", type=int, help="mel spectrogram frames to save", default=180)
+    args = parser.parse_args().__dict__
+    timit_object = ProcessTimit(**args)
+    timit_object.process_data()
+
+
+
+
+
+
+
+
+
                 
 
 
