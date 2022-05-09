@@ -71,8 +71,8 @@ class ProcessTimit:
                     audio_utter = audio[interval[0]:interval[1]]
                     mel_spec = librosa.feature.melspectrogram(y=audio_utter,
                     sr=sr,n_fft=self.n_fft,hop_length=self.hop_length,win_length=self.win_length)
-                    utterances.append([mel_spec[:,:self.frames]])
-                    utterances.append([mel_spec[:,-self.frames:]])
+                    utterances.append(mel_spec[:,:self.frames])
+                    utterances.append(mel_spec[:,-self.frames:])
         return np.array(utterances)
                 
 if __name__ == "__main__":
