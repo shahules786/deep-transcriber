@@ -51,11 +51,12 @@ class ProcessTimit:
             if os.path.isdir(os.path.join(self.directory,dilect_dir)) and n<=self.num_dilects:
                 logging.info(f"DILECT {i} is {dilect_dir}")
                 n+=1
-                for j,speaker_dir in tqdm(enumerate(os.listdir(os.path.join(self.directory,dilect_dir)))):
+                for j,speaker_dir in enumerate(os.listdir(os.path.join(self.directory,dilect_dir))):
                         if os.path.isdir(os.path.join(self.directory,dilect_dir,speaker_dir)):
                             utterances = self.process_wav(os.path.join(self.directory,dilect_dir,speaker_dir))
                             logging.info(f"{utterances.shape[0]} utterances found..")
                             np.save(os.path.join(self.output,f"{dilect_dir}_{speaker_dir}.npy"),utterances)
+
 
     def process_wav(
         self,
@@ -65,7 +66,6 @@ class ProcessTimit:
         for file in [file for file in glob.glob(os.path.join(files,"*")) if file.endswith(".WAV")]:
             audio,sr = librosa.core.load(file,sr=self.sampling_rate)
             audio_intervals = librosa.effects.split(audio,top_db=30)
-            logging.info(f"{audio_intervals.shape[0]} intervals found")
             for interval in audio_intervals:
                 if interval[1]-interval[0] > self.min_utterance_len:
                     audio_utter = audio[interval[0]:interval[1]]
