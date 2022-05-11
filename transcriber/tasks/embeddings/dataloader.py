@@ -1,7 +1,10 @@
+import enum
+from tkinter import N
 from torch.utils.data import DataLoader,Dataset
 import numpy as np
 import glob 
 import os 
+import random
 
 
 
@@ -45,4 +48,32 @@ class TimitDataset(Dataset):
 
     ):
         return len(self.filter_utterances)
+
+
+def TimitCollate():
+
+    def __init__(
+        self,
+        num_speakers:int,
+        num_utters:int
+    ):
+        self.num_speakers = num_speakers
+        self.num_utters = num_utters
+
+
+    def __call__(
+        self,
+        batch
+    ):
+        batch = batch.reshape((self.num_speakers*self.num_utters, batch.shape(2),batch.shape(3)))
+        permute = random.sample(range(0,self.num_speakers*self.num_utters),self.num_speakers*self.num_utters)
+        unpermute = permute.copy()
+        for i,j in enumerate(permute):
+            unpermute[j] = i
+
+        return {"data": batch[permute],
+                "unpermute":unpermute}
+                
+
+
 
