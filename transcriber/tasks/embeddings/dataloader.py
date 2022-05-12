@@ -13,11 +13,13 @@ class TimitDataset(Dataset):
     def __init__(
         self,
         directory:str,
+        n_speakers:int,
         n_utterances:int
     ):
         self.directory = directory
         self.n_utterances = n_utterances
-        self.utterances = self.filter_utterances()
+        self.n_speakers = n_speakers
+        self.utterances = np.random.choice(self.filter_utterances(),self.n_utterances*self.n_speakers)
 
 
     def filter_utterances(
@@ -54,26 +56,27 @@ def TimitCollate():
 
     def __init__(
         self,
-        num_speakers:int,
-        num_utters:int
+        n_speakers:int,
+        n_utterances:int
     ):
-        self.num_speakers = num_speakers
-        self.num_utters = num_utters
+        self.n_speakers = n_speakers
+        self.n_utterances = n_utterances
 
 
     def __call__(
         self,
         batch
     ):
-        batch = batch.reshape((self.num_speakers*self.num_utters, batch.shape(2),batch.shape(3)))
-        permute = random.sample(range(0,self.num_speakers*self.num_utters),self.num_speakers*self.num_utters)
+        batch = batch.reshape((self.n_speakers*self.n_utterances, batch.shape(2),batch.shape(3)))
+        permute = random.sample(range(0,self.n_speakers*self.n_utterances),self.n_speakers*self.n_utterances)
         unpermute = permute.copy()
         for i,j in enumerate(permute):
             unpermute[j] = i
 
         return {"data": batch[permute],
-                "unpermute":unpermute}
-                
+                "unpermute":unpermute
+                }
+
 
 
 
