@@ -2,6 +2,7 @@
 import os
 import torch
 from torch.utils.data import DataLoader
+from torch.optim import Adam
 
 from transcriber.tasks.embeddings.dataloader import TimitDataset,TimitCollate
 from transcriber.tasks.utils import min_value_check, path_check
@@ -63,8 +64,28 @@ class EmbedTrainer:
         self,
     ):
         datalaoders = self._prepare_dataloaders()
-        pass
-        
+        model = ##call model
+        optimizer = Adam(self._get_optimizer(model))
+
+
+
+    def _get_optimizer(
+        self,
+        model
+    ):
+        no_decay = ['gamma','beta','bias']
+        optimizer_params = [
+            {"params":[n for k,n in model.named_parameters() if any([i in k for i in no_decay])],
+            "weight_decay":0.0,
+            "lr":self.lr},
+
+            {"params":[n for k,n in model.named_parameters() if not any([i in k for i in no_decay])],
+            "weight_decay":0.01,
+            "lr":self.lr},
+
+        ]
+        return optimizer_params
+
     def _prepare_dataloaders(
         self,
     ):
@@ -75,7 +96,6 @@ class EmbedTrainer:
 
         valid_dataset = TimitDataset(directory=self.train, n_utterances=self.n_utterances,
                                         n_speakers = self.n_speakers)
-        collate_fn = TimitCollate(n_speakers = self.n_speakers, n_utterances=self.n_utterances)
         valid_dataset = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=collate_fn)
 
         return {"train":train_dataset,
