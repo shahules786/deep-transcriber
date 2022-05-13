@@ -21,7 +21,6 @@ class EmbedTrainer:
         hidden_layers:int,
         num_layers:int,
         embedding_dim:int,
-        device:str="cpu"
     ):
 
         if path_check(train):
@@ -51,14 +50,23 @@ class EmbedTrainer:
         if min_value_check(embedding_dim,0):
             self.num_layers = num_layers
 
+        self._device = torch.device("cuda") if torch.cuda().is_avalable() else torch.device("cpu")
+        self.lr = lr
+
+    @property
+    def device(self):
+        return self._device
+
+    @device.setter
+    def device(self,device):
+
         if device not in ("cpu","cuda"):
             raise ValueError("device should be cpu or cuda")
         else:
             if getattr(torch,device).is_available():
-                self.device = torch.device(device)
+                self._device = torch.device(device)
             else:
                 raise ValueError(f"{device} not available!")
-        self.lr = lr
     
     def train(
         self,
