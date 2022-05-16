@@ -1,4 +1,5 @@
 
+import logging
 import os
 import torch
 from torch.utils.data import DataLoader
@@ -21,6 +22,7 @@ class EmbedTrainer:
         hidden_layers:int,
         num_layers:int,
         embedding_dim:int,
+        model_dir : str
     ):
 
         if path_check(train):
@@ -48,10 +50,19 @@ class EmbedTrainer:
             self.hidden_layers = hidden_layers
 
         if min_value_check(embedding_dim,0):
-            self.num_layers = num_layers
+            self.embedding_dim = embedding_dim
 
         self._device = torch.device("cuda") if torch.cuda().is_avalable() else torch.device("cpu")
         self.lr = lr
+
+        if not os.path.exists(model_dir):
+            logging.info(f"Creating {model_dir}...")
+            os.mkdir(model_dir)
+
+        if path_check(model_dir):
+            self.model_dir = model_dir
+        
+            
 
     @property
     def device(self):
@@ -74,8 +85,46 @@ class EmbedTrainer:
         datalaoders = self._prepare_dataloaders()
         model = ##call model
         optimizer = Adam(self._get_optimizer(model))
+        loss_fn = ##define loss here
+        
+        for epoch in range(self.epochs):
+            loss = {"train":[], "valid": []}
+            for batch_num,data in enumerate(datalaoders['train']):
+                output = self._run_single_batch(model,optimizer,loss_fn,data,phase="train")
+                loss['train'].append(output['loss'])
 
+            for batch_num,data in enumerate(datalaoders['valid']):
+                output = self._run_single_batch(model,optimizer,loss_fn,data=data,phase="valid")
+                loss['valid'].append(output['loss'])
+            
+            logging.info(f"Train loss epoch {epoch} : {loss['train'].mean()}")
+            logging.info(f"Valid loss epoch {epoch} : {loss['train'].mean()}")
 
+        logging.info("Training Finished. Saving model..")
+        torch.save(model.state_dict(),self.model_dir)
+                
+    def _run_single_batch(
+        self,model,optimizer,criterion,data,phase
+    ):
+        for k in data.keys():
+            data[k] = data[k].to(self.device)
+
+        if phase == "train":
+            model.train()
+            optimizer.zero_grad()
+        else:
+            model.eval()
+
+        with torch.set_grad_enabled(phase == "train"):
+            embeddings = model(data["data"])
+            embeddings = embeddings[data["umpermute"]].reshape(self.n_speakers,self.n_utterances,self.embedding_dim)
+            loss = criterion(embeddings)
+            if phase == "train":
+                loss.backward()
+                optimizer.step()
+            
+        return {"embeddings":embeddings,"loss":loss.item()}
+            
 
     def _get_optimizer(
         self,
