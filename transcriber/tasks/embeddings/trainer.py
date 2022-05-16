@@ -1,4 +1,5 @@
 
+from distutils.debug import DEBUG
 import logging
 import os
 import torch
@@ -7,6 +8,7 @@ from torch.optim import Adam
 
 from transcriber.tasks.embeddings.dataloader import TimitDataset,TimitCollate
 from transcriber.tasks.utils import min_value_check, path_check
+
 
 class EmbedTrainer:
 
@@ -22,7 +24,8 @@ class EmbedTrainer:
         hidden_layers:int,
         num_layers:int,
         embedding_dim:int,
-        model_dir : str
+        model_dir : str,
+        logger:str = "DEBUG"
     ):
 
         if path_check(train):
@@ -61,9 +64,10 @@ class EmbedTrainer:
 
         if path_check(model_dir):
             self.model_dir = model_dir
-        
-            
 
+        if logger in ("DEBUG","INFO"):
+            logging.getLogger().setLevel(setattr(logging,logger))
+           
     @property
     def device(self):
         return self._device
@@ -163,9 +167,6 @@ class EmbedTrainer:
 
     ):
         pass
-
-
-
 
 
 if __name__ == "__main__":
