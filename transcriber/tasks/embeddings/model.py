@@ -22,6 +22,6 @@ class Embeder(nn.Module):
         ):
             ouput,(h_c,c_n) = self.LSTM(input)
             embedding = self.projection(ouput[:,-1])
-            embedding = embedding / torch.norm(embedding,dim=1) 
+            embedding = embedding / torch.norm(embedding,dim=-1,keepdim=True) 
             return embedding
 
