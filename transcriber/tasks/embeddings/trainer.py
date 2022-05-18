@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from torch.optim import Adam
 
 from transcriber.tasks.embeddings.dataloader import TimitDataset,TimitCollate
+from transcriber.tasks.embeddings.model import Embeder
 from transcriber.tasks.utils import min_value_check, path_check
 
 
@@ -14,37 +15,12 @@ class EmbedTrainer:
 
     def __init__(
         self,
-        train:str,
-        test:str,
-        n_speakers:int,
-        n_utterances:int,
-        batch_size:int,
-        epochs:int,
-        lr:float,
         hidden_layers:int,
         num_layers:int,
         embedding_dim:int,
         model_dir : str,
         logger:str = "DEBUG"
     ):
-
-        if path_check(train):
-            self.train = train
-
-        if path_check(test):
-            self.test = test
-
-        if min_value_check(n_speakers,0):
-            self.n_speakers = n_speakers
-
-        if min_value_check(n_utterances,0):
-            self.n_utterances = n_utterances
-
-        if min_value_check(batch_size,0):
-            self.batch_size = batch_size
-
-        if min_value_check(epochs,0):
-            self.epochs = epochs
         
         if min_value_check(num_layers,0):
             self.num_layers = num_layers
@@ -56,7 +32,6 @@ class EmbedTrainer:
             self.embedding_dim = embedding_dim
 
         self._device = torch.device("cuda") if torch.cuda().is_avalable() else torch.device("cpu")
-        self.lr = lr
 
         if not os.path.exists(model_dir):
             logging.info(f"Creating {model_dir}...")
@@ -85,9 +60,39 @@ class EmbedTrainer:
     
     def train(
         self,
+        train:str,
+        test:str,
+        batch_size:int,
+        epochs:int,
+        lr:float,
+        n_speakers:int,
+        n_utterances:int,
+
+        
     ):
+        if path_check(train):
+            self.train = train
+
+        if path_check(test):
+            self.test = test
+
+        if min_value_check(batch_size,0):
+            self.batch_size = batch_size
+
+        if min_value_check(epochs,0):
+            self.epochs = epochs
+
+        if min_value_check(n_speakers,0):
+            self.n_speakers = n_speakers
+
+        if min_value_check(n_utterances,0):
+            self.n_utterances = n_utterances
+        
+        self.lr = lr
+
+
         datalaoders = self._prepare_dataloaders()
-        model = ##call model
+        model = Embeder()
         optimizer = Adam(self._get_optimizer(model))
         loss_fn = ##define loss here
         
@@ -166,6 +171,9 @@ class EmbedTrainer:
         self,
 
     ):
+        ##load model from model_dir using conf from __init__
+        ## accept data as input and do shape checks
+        ## make prediction return embeddings
         pass
 
 
