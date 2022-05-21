@@ -19,7 +19,7 @@ class TimitDataset(Dataset):
         self.directory = directory
         self.n_utterances = n_utterances
         self.n_speakers = n_speakers
-        self.utterances = np.random.choice(self.filter_utterances(),self.n_utterances*self.n_speakers)
+        self.utterances = self.filter_utterances()
 
 
     def filter_utterances(

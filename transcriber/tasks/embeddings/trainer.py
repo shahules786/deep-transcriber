@@ -190,11 +190,11 @@ if __name__ == "__main__":
     trainer = EmbedTrainer(hidden_layers=args["model"]["hidden_layers"],
                             num_layers=args["model"]["num_layers"],
                             embedding_dim=args["model"]["embedding_dim"],
-                            logger=args["model"]["logger"]) 
+                            logger=args["data"]["logger"]) 
     
     trainer.train(train=args["data"]["train"],
                 test=args["data"]["test"],
-                batch_size=args["train"]["batch_size"],
+                batch_size=args["training"]["batch_size"],
                 epochs=args["training"]["epochs"],
                 lr=args["training"]["lr"],
                 n_speakers=args["training"]["n_speakers"],
