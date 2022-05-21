@@ -1,0 +1,18 @@
+data:
+  train: './data/train/'
+  test:  './data/test/'
+  logger : 'DEBUG'
+
+model:
+  hidden_size: 768
+  num_layers: 3
+  embedding_dim: 256
+  model_dir: './model/'
+
+training:
+  n_speakers: 3
+  n_utterances: 5
+  batch_size: 3
+  lr: 0.0001
+  epochs: 1
+
