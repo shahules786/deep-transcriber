@@ -4,6 +4,7 @@ data:
   logger : 'DEBUG'
 
 model:
+  input_size: 180
   hidden_size: 768
   num_layers: 3
   embedding_dim: 256
