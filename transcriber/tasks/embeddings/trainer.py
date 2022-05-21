@@ -2,6 +2,7 @@
 from distutils.debug import DEBUG
 import logging
 import os
+import yaml 
 import torch
 from torch.utils.data import DataLoader
 from torch.optim import Adam
@@ -182,13 +183,23 @@ class EmbedTrainer:
 
 
 if __name__ == "__main__":
-    import yaml
 
     with open('conf.yaml') as file:
         args = yaml.full_load(file)
 
-    trainer = EmbedTrainer(**args)  ##change this to pass keyword arguments 
-    trainer.train()
+    trainer = EmbedTrainer(hidden_layers=args["model"]["hidden_layers"],
+                            num_layers=args["model"]["num_layers"],
+                            embedding_dim=args["model"]["embedding_dim"],
+                            logger=args["model"]["logger"]) 
+    
+    trainer.train(train=args["data"]["train"],
+                test=args["data"]["test"],
+                batch_size=args["train"]["batch_size"],
+                epochs=args["training"]["epochs"],
+                lr=args["training"]["lr"],
+                n_speakers=args["training"]["n_speakers"],
+                n_utterances=args["training"]["n_utterances"])
+
 
 
 
