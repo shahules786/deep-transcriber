@@ -17,23 +17,26 @@ class EmbedTrainer:
 
     def __init__(
         self,
-        hidden_layers:int,
+        input_size:int,
+        hidden_size:int,
         num_layers:int,
         embedding_dim:int,
         model_dir : str,
         logger:str = "DEBUG"
     ):
-        
+        if min_value_check(input_size,0):
+            self.input_size = input_size
+
         if min_value_check(num_layers,0):
             self.num_layers = num_layers
 
-        if min_value_check(hidden_layers,0):
-            self.hidden_layers = hidden_layers
+        if min_value_check(hidden_size,0):
+            self.hidden_size = hidden_size
 
         if min_value_check(embedding_dim,0):
             self.embedding_dim = embedding_dim
 
-        self._device = torch.device("cuda") if torch.cuda().is_avalable() else torch.device("cpu")
+        self._device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         if not os.path.exists(model_dir):
             logging.info(f"Creating {model_dir}...")
@@ -43,7 +46,8 @@ class EmbedTrainer:
             self.model_dir = model_dir
 
         if logger in ("DEBUG","INFO"):
-            logging.getLogger().setLevel(setattr(logging,logger))
+            logging.basicConfig(level=getattr(logging,logger))
+            logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
            
     @property
     def device(self):
@@ -94,9 +98,10 @@ class EmbedTrainer:
 
 
         datalaoders = self._prepare_dataloaders()
-        model = Embeder()
+        model = Embeder(input_size=self.input_size,hidden_size=self.hidden_size,num_layers=self.num_layers,
+                        embed_size=self.embedding_dim)
         optimizer = Adam(self._get_optimizer(model))
-        loss_fn = Ge2eLoss()
+        loss_fn = Ge2eLoss(N=self.n_speakers,M=self.n_utterances)
 
         for epoch in range(self.epochs):
             loss = {"train":[], "valid": []}
@@ -117,8 +122,7 @@ class EmbedTrainer:
     def _run_single_batch(
         self,model,optimizer,criterion,data,phase
     ):
-        for k in data.keys():
-            data[k] = data[k].to(self.device)
+        data["data"] = data["data"].to(self.device)
 
         if phase == "train":
             model.train()
@@ -128,7 +132,7 @@ class EmbedTrainer:
 
         with torch.set_grad_enabled(phase == "train"):
             embeddings = model(data["data"])
-            embeddings = embeddings[data["umpermute"]].reshape(self.n_speakers,self.n_utterances,self.embedding_dim)
+            embeddings = embeddings[data["unpermute"]].reshape(self.n_speakers,self.n_utterances,self.embedding_dim)
             loss = criterion(embeddings)
             if phase == "train":
                 loss.backward()
@@ -184,12 +188,14 @@ class EmbedTrainer:
 
 if __name__ == "__main__":
 
-    with open('conf.yaml') as file:
+    with open('transcriber/tasks/embeddings/conf.yaml') as file:
         args = yaml.full_load(file)
 
-    trainer = EmbedTrainer(hidden_layers=args["model"]["hidden_layers"],
+    trainer = EmbedTrainer(input_size=args["model"]["input_size"],
+                            hidden_size=args["model"]["hidden_size"],
                             num_layers=args["model"]["num_layers"],
                             embedding_dim=args["model"]["embedding_dim"],
+                            model_dir=args["model"]["model_dir"],
                             logger=args["data"]["logger"]) 
     
     trainer.train(train=args["data"]["train"],
