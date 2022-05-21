@@ -9,6 +9,7 @@ from torch.optim import Adam
 from transcriber.tasks.embeddings.dataloader import TimitDataset,TimitCollate
 from transcriber.tasks.embeddings.model import Embeder
 from transcriber.tasks.utils import min_value_check, path_check
+from transcriber.tasks.embeddings.loss import Ge2eLoss
 
 
 class EmbedTrainer:
@@ -94,8 +95,8 @@ class EmbedTrainer:
         datalaoders = self._prepare_dataloaders()
         model = Embeder()
         optimizer = Adam(self._get_optimizer(model))
-        loss_fn = ##define loss here
-        
+        loss_fn = Ge2eLoss()
+
         for epoch in range(self.epochs):
             loss = {"train":[], "valid": []}
             for batch_num,data in enumerate(datalaoders['train']):
@@ -155,6 +156,9 @@ class EmbedTrainer:
     def _prepare_dataloaders(
         self,
     ):
+        if self.batch_size!=self.n_speakers:
+            raise ValueError("batch_size should be equal to n_speakers")
+
         train_dataset = TimitDataset(directory=self.train, n_utterances=self.n_utterances,
                                         n_speakers = self.n_speakers)
         collate_fn = TimitCollate(n_speakers = self.n_speakers, n_utterances=self.n_utterances)
