@@ -4,6 +4,7 @@ import logging
 import os
 import yaml 
 import torch
+import numpy as np
 from torch.utils.data import DataLoader
 from torch.optim import Adam
 
@@ -113,11 +114,11 @@ class EmbedTrainer:
                 output = self._run_single_batch(model,optimizer,loss_fn,data=data,phase="valid")
                 loss['valid'].append(output['loss'])
             
-            logging.info(f"Train loss epoch {epoch} : {loss['train'].mean()}")
-            logging.info(f"Valid loss epoch {epoch} : {loss['train'].mean()}")
+            logging.info(f"Train loss epoch {epoch} : {np.mean(loss['train'])}")
+            logging.info(f"Valid loss epoch {epoch} : {np.mean(loss['train'])}")
 
         logging.info("Training Finished. Saving model..")
-        torch.save(model.state_dict(),self.model_dir)
+        torch.save(model.state_dict(),os.path.join(self.model_dir,"model.pt"))
                 
     def _run_single_batch(
         self,model,optimizer,criterion,data,phase
@@ -167,11 +168,11 @@ class EmbedTrainer:
         train_dataset = TimitDataset(directory=self.train, n_utterances=self.n_utterances,
                                         n_speakers = self.n_speakers)
         collate_fn = TimitCollate(n_speakers = self.n_speakers, n_utterances=self.n_utterances)
-        train_dataset = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=collate_fn)
+        train_dataset = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=collate_fn, drop_last=True)
 
         valid_dataset = TimitDataset(directory=self.train, n_utterances=self.n_utterances,
                                         n_speakers = self.n_speakers)
-        valid_dataset = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=collate_fn)
+        valid_dataset = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=collate_fn, drop_last=True)
 
         return {"train":train_dataset,
                 "valid":valid_dataset}
