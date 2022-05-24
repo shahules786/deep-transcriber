@@ -7,6 +7,7 @@ module load anaconda
 echo "Creating Virtual Environment"
 conda env create -f environment.yml ||  conda env update -f environment.yml
 
-echo "Fetch Bert Model..."
-source activate pytorch-ner
-python src/config.py
+source activate deep-transcriber 
+
+echo "Download train files"
+python transcriber/tasks/utils.py 
