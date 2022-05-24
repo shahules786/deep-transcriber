@@ -176,16 +176,7 @@ class EmbedTrainer:
 
         return {"train":train_dataset,
                 "valid":valid_dataset}
-
-    def eval(
-        self,
-
-    ):
-        ##load model from model_dir using conf from __init__
-        ## accept data as input and do shape checks
-        ## make prediction return embeddings
-        pass
-
+                
 
 if __name__ == "__main__":
 
