@@ -29,7 +29,7 @@ class Ge2eLoss(nn.Module):
                 cosine_sim[self.M*j+k][j] = torch.dot(c_j,embeddings[j,k,:])
         
         cosine_sim = self.w*cosine_sim + self.b 
-        labels = torch.zeros((self.N*self.M,),dtype=int)
+        labels = torch.zeros((self.N*self.M,),dtype=int,device=embeddings.device)
         for i,j in enumerate(range(0,self.N*self.M,self.M)):
             labels[j:j+self.M] = i
 
