@@ -2,7 +2,10 @@
 model/
 __pycache__/
 .DS_store
-/data
+/data/train
+/data/test/
+/data/lisa/
+/data/.*json
 *.py[cod]
 *$py.class
 
