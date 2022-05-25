@@ -1,5 +1,4 @@
 
-from distutils.debug import DEBUG
 import logging
 import os
 import yaml 
@@ -176,7 +175,7 @@ class EmbedTrainer:
 
         return {"train":train_dataset,
                 "valid":valid_dataset}
-                
+
 
 if __name__ == "__main__":
 
