@@ -9,5 +9,5 @@ conda env create -f environment.yml ||  conda env update -f environment.yml
 
 source activate deep-transcriber 
 
-echo "Download train files"
-python transcriber/tasks/utils.py 
+echo "copying files"
+cp /scratch/$USER/TIMIT/.* /deep-transcriber
