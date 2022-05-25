@@ -10,4 +10,4 @@ conda env create -f environment.yml ||  conda env update -f environment.yml
 source activate deep-transcriber 
 
 echo "copying files"
-cp /scratch/$USER/TIMIT/.* /deep-transcriber
+# cp /scratch/$USER/TIMIT/.* /deep-transcriber
