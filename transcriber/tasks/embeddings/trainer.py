@@ -99,7 +99,7 @@ class EmbedTrainer:
 
         datalaoders = self._prepare_dataloaders()
         model = Embeder(input_size=self.input_size,hidden_size=self.hidden_size,num_layers=self.num_layers,
-                        embed_size=self.embedding_dim)
+                        embed_size=self.embedding_dim).to(self.device)
         optimizer = Adam(self._get_optimizer(model))
         loss_fn = Ge2eLoss(N=self.n_speakers,M=self.n_utterances)
 
