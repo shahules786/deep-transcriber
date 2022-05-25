@@ -37,6 +37,7 @@ class ProcessTimit:
 
         if not os.path.exists(self.output):
             os.mkdir(self.output)
+            logging.info("Directory created..")
         else:
             logging.info("DELETING OLD FILES..")
             for file in glob.glob(os.path.join(self.output,"*")):

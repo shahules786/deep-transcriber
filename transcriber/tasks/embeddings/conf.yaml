@@ -1,6 +1,6 @@
 data:
-  train: '/scratch/$USER/TIMIT/data/train'
-  test:  '/scratch/$USER/TIMIT/data/test'
+  train: './data/train'
+  test:  './data/test'
   logger : 'DEBUG'
 
 model:
