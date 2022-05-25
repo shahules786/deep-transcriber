@@ -45,7 +45,7 @@ class EmbedTrainer:
         if path_check(model_dir):
             self.model_dir = model_dir
 
-        if logger in ("DEBUG","INFO"):
+        if logger in ("DEBUG","INFO","WARN"):
             logging.basicConfig(level=getattr(logging,logger))
             logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
            
