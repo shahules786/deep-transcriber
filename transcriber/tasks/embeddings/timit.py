@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--directory", type=str, help="Directory with files")  #/Users/shahules/Myprojects/deep-transcriber/data/lisa/data/timit/raw/TIMIT
     parser.add_argument("--output", type=str, help="Directory to write output files")    #/Users/shahules/Myprojects/deep-transcriber/data/output
     parser.add_argument("--sampling_rate", type=int, help="Sampling rate", default=16000)
-    parser.add_argument("--num_dilects", type=int, help="Number of dialects to process", default=1)
+    parser.add_argument("--num_dilects", type=int, help="Number of dialects to process", default=3)
     parser.add_argument("--n_fft", type=int, help="Hop length for STFT", default=512)
     parser.add_argument("--hop_length", type=int, help="Hop length for STFT", default=160)
     parser.add_argument("--win_length", type=int, help="Window length for STFT", default=400)
