@@ -6,7 +6,7 @@ __pycache__/
 /data/train
 /data/test/
 /data/lisa/
-/data/.*json
+
 *.py[cod]
 *$py.class
 
@@ -134,5 +134,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-data/kaggle.json
 hpc_entrypoint.sh
