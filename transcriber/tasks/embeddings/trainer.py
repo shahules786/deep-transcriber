@@ -4,6 +4,7 @@ import os
 import yaml 
 import torch
 import numpy as np
+import mlflow
 from torch.utils.data import DataLoader
 from torch.optim import Adam
 
@@ -47,7 +48,9 @@ class EmbedTrainer:
 
         if logger in ("DEBUG","INFO","WARN"):
             logging.basicConfig(level=getattr(logging,logger))
-            logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+            logging.basicConfig(filename='example.log', filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S',encoding='utf-8', level=logging.DEBUG)
            
     @property
     def device(self):
@@ -73,6 +76,8 @@ class EmbedTrainer:
         lr:float,
         n_speakers:int,
         n_utterances:int,
+        experiment_name:str,
+        run_name:str
 
         
     ):
@@ -96,6 +101,8 @@ class EmbedTrainer:
         
         self.lr = lr
 
+        self.experiment_name = experiment_name if not None else "experiment"
+        self.run_name = run_name if not None else "run"
 
         datalaoders = self._prepare_dataloaders()
         model = Embeder(input_size=self.input_size,hidden_size=self.hidden_size,num_layers=self.num_layers,
@@ -103,21 +110,27 @@ class EmbedTrainer:
         optimizer = Adam(self._get_optimizer(model))
         loss_fn = Ge2eLoss(N=self.n_speakers,M=self.n_utterances)
 
-        for epoch in range(self.epochs):
-            loss = {"train":[], "valid": []}
-            for batch_num,data in enumerate(datalaoders['train']):
-                output = self._run_single_batch(model,optimizer,loss_fn,data,phase="train")
-                loss['train'].append(output['loss'])
-
-            for batch_num,data in enumerate(datalaoders['valid']):
-                output = self._run_single_batch(model,optimizer,loss_fn,data=data,phase="valid")
-                loss['valid'].append(output['loss'])
+        experiment = mlflow.get_experiment_by_name(self.experiment_name)
+        if not experiment:
+            experiment = mlflow.set_experiment(self.experiment_name)
+        with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=self.run_name):
             
-            logging.info(f"Train loss epoch {epoch} : {np.mean(loss['train'])}")
-            logging.info(f"Valid loss epoch {epoch} : {np.mean(loss['train'])}")
+            for epoch in range(self.epochs):
+                loss = {"train":[], "valid": []}
+                for batch_num,data in enumerate(datalaoders['train']):
+                    output = self._run_single_batch(model,optimizer,loss_fn,data,phase="train")
+                    loss['train'].append(output['loss'])
 
-        logging.info("Training Finished. Saving model..")
-        torch.save(model.state_dict(),os.path.join(self.model_dir,"model.pt"))
+                for batch_num,data in enumerate(datalaoders['valid']):
+                    output = self._run_single_batch(model,optimizer,loss_fn,data=data,phase="valid")
+                    loss['valid'].append(output['loss'])
+                
+                logging.info(f"Train loss epoch {epoch} : {np.mean(loss['train'])}")
+                logging.info(f"Valid loss epoch {epoch} : {np.mean(loss['train'])}")
+
+            logging.info("Training Finished. Saving model..")
+            torch.save(model.state_dict(),os.path.join(self.model_dir,"model.pt"))
+            mlflow.log_artifact(os.path.join(self.model_dir,"model.pt"))
                 
     def _run_single_batch(
         self,model,optimizer,criterion,data,phase
@@ -195,7 +208,9 @@ if __name__ == "__main__":
                 epochs=args["training"]["epochs"],
                 lr=args["training"]["lr"],
                 n_speakers=args["training"]["n_speakers"],
-                n_utterances=args["training"]["n_utterances"])
+                n_utterances=args["training"]["n_utterances"],
+                experiment_name=args["training"]["experiment_name"],
+                run_name=args["training"]["run_name"])
 
 
 
