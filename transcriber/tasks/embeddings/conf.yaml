@@ -15,5 +15,7 @@ training:
   n_utterances: 5
   batch_size: 3
   lr: 0.0001
-  epochs: 5
+  epochs: 1
+  experiment_name: 'deep-transcriber'
+  run_name: 'baseline'
 
