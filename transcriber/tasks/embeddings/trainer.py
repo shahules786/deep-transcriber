@@ -127,7 +127,11 @@ class EmbedTrainer:
                     loss['valid'].append(output['loss'])
                 
                 logging.info(f"Train loss epoch {epoch} : {np.mean(loss['train'])}")
-                logging.info(f"Valid loss epoch {epoch} : {np.mean(loss['train'])}")
+                logging.info(f"Valid loss epoch {epoch} : {np.mean(loss['valid'])}")
+                
+                mlflow.log_metrics({"Train Loss":np.mean(loss['train'])},step=epoch)
+                mlflow.log_metrics({"Valid Loss":np.mean(loss['valid'])},step=epoch)
+
 
             logging.info("Training Finished. Saving model..")
             torch.save(model.state_dict(),os.path.join(self.model_dir,"model.pt"))

@@ -7,7 +7,7 @@ import librosa
 from argparse import ArgumentParser
 from tqdm import tqdm
 import shutil
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.WARN)
 
 
 
