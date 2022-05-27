@@ -10,3 +10,4 @@ torch==1.10.2
 tqdm==4.64.0
 mlflow==1.23.1
 protobuf==3.19.3
+boto3==1.23.9
