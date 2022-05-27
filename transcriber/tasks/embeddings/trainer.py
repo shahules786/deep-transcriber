@@ -47,7 +47,7 @@ class EmbedTrainer:
             self.model_dir = model_dir
 
         if logger in ("DEBUG","INFO","WARN"):
-            logging.basicConfig(filename='deep-transcriber.log', filemode='a',
+            logging.basicConfig(filename='deep-transcriber.log', filemode='w',
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                     datefmt='%H:%M:%S', level=logging.DEBUG,)
             logging.basicConfig(level=getattr(logging,logger))
@@ -132,7 +132,8 @@ class EmbedTrainer:
             logging.info("Training Finished. Saving model..")
             torch.save(model.state_dict(),os.path.join(self.model_dir,"model.pt"))
             mlflow.log_artifact(os.path.join(self.model_dir,"model.pt"))
-            mlflow.log_artifact('deep-transcriber.log')
+            if os.path.exists("deep-transcriber.log"):
+                mlflow.log_artifact('deep-transcriber.log')
                 
     def _run_single_batch(
         self,model,optimizer,criterion,data,phase
