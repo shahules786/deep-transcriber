@@ -19,7 +19,7 @@ echo "Load HPC modules"
 module load anaconda
 
 echo "Activate Environment"
-source activate pytorch-ner
+source activate deep-transcriber
 export TRANSFORMERS_OFFLINE=True
 export PYTHONPATH=${PYTHONPATH}:$/scratch/$USER/deep-transcriber
 
