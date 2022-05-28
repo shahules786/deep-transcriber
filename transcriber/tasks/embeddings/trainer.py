@@ -108,8 +108,9 @@ class EmbedTrainer:
         datalaoders = self._prepare_dataloaders()
         model = Embeder(input_size=self.input_size,hidden_size=self.hidden_size,num_layers=self.num_layers,
                         embed_size=self.embedding_dim).to(self.device)
-        optimizer = Adam(self._get_optimizer(model))
         loss_fn = Ge2eLoss(N=self.n_speakers,M=self.n_utterances)
+        optimizer = Adam(self._get_optimizer(model,loss_fn))
+        
 
         experiment = mlflow.get_experiment_by_name(self.experiment_name)
         if not experiment:
@@ -163,7 +164,8 @@ class EmbedTrainer:
 
     def _get_optimizer(
         self,
-        model
+        model,
+        loss
     ):
         no_decay = ['gamma','beta','bias']
         optimizer_params = [
@@ -173,6 +175,10 @@ class EmbedTrainer:
 
             {"params":[n for k,n in model.named_parameters() if not any([i in k for i in no_decay])],
             "weight_decay":0.01,
+            "lr":self.lr},
+
+            {"params":loss.parameters(),
+            "weight_decay":0.0,
             "lr":self.lr},
 
         ]
