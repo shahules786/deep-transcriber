@@ -3,6 +3,8 @@ import logging
 import os
 import json
 import zipfile
+from huggingface_hub import cached_download, hf_hub_url
+
 
 
 def min_value_check(arg,value):
@@ -30,6 +32,13 @@ def download_data_kaggle(file_name='programmerrdai/house-price-to-the-moon',save
     logging.info("Data downloaded..")
     with zipfile.ZipFile(os.path.join(save_path,f'{file_name.split("/")[-1]}.zip'), 'r') as zip_ref:
         zip_ref.extractall(save_path)
+
+def load_file_hf(filename, model_id, revision_id):
+    url = hf_hub_url(model_id=model_id, revision_id=revision_id,filename=filename)
+    path = cached_download(
+                url=url,
+            )
+    return path
 
 
 if __name__ == "__main__":
