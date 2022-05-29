@@ -4,7 +4,7 @@ data:
   logger : 'INFO'
 
 model:
-  input_size: 180
+  input_size: 40
   hidden_size: 768
   num_layers: 3
   embedding_dim: 256
@@ -14,7 +14,7 @@ training:
   n_speakers: 5
   n_utterances: 5
   batch_size: 5
-  lr: 0.001
+  lr: 0.01
   epochs: 50
   experiment_name: 'deep-transcriber'
   run_name: 'baseline'
