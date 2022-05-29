@@ -6,7 +6,7 @@ import torch
 import numpy as np
 import mlflow
 from torch.utils.data import DataLoader
-from torch.optim import Adam
+from torch.optim import Adam,SGD
 
 from transcriber.tasks.embeddings.dataloader import TimitDataset,TimitCollate
 from transcriber.tasks.embeddings.model import Embeder
@@ -109,7 +109,7 @@ class EmbedTrainer:
         model = Embeder(input_size=self.input_size,hidden_size=self.hidden_size,num_layers=self.num_layers,
                         embed_size=self.embedding_dim).to(self.device)
         loss_fn = Ge2eLoss(N=self.n_speakers,M=self.n_utterances)
-        optimizer = Adam(self._get_optimizer(model,loss_fn))
+        optimizer = SGD(self._get_optimizer(model,loss_fn))
         
 
         experiment = mlflow.get_experiment_by_name(self.experiment_name)
@@ -122,7 +122,8 @@ class EmbedTrainer:
                 for batch_num,data in enumerate(datalaoders['train']):
                     output = self._run_single_batch(model,optimizer,loss_fn,data,phase="train")
                     loss['train'].append(output['loss'])
-
+                
+                print("valid phase")
                 for batch_num,data in enumerate(datalaoders['valid']):
                     output = self._run_single_batch(model,optimizer,loss_fn,data=data,phase="valid")
                     loss['valid'].append(output['loss'])
@@ -157,6 +158,8 @@ class EmbedTrainer:
             loss = criterion(embeddings)
             if phase == "train":
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 3.0)
+                torch.nn.utils.clip_grad_norm_(criterion.parameters(), 1.0)
                 optimizer.step()
             
         return {"embeddings":embeddings,"loss":loss.item()}
@@ -167,14 +170,9 @@ class EmbedTrainer:
         model,
         loss
     ):
-        no_decay = ['gamma','beta','bias']
         optimizer_params = [
-            {"params":[n for k,n in model.named_parameters() if any([i in k for i in no_decay])],
+            {"params":model.parameters(),
             "weight_decay":0.0,
-            "lr":self.lr},
-
-            {"params":[n for k,n in model.named_parameters() if not any([i in k for i in no_decay])],
-            "weight_decay":0.01,
             "lr":self.lr},
 
             {"params":loss.parameters(),
@@ -182,6 +180,7 @@ class EmbedTrainer:
             "lr":self.lr},
 
         ]
+        print(optimizer_params)
         return optimizer_params
 
     def _prepare_dataloaders(
