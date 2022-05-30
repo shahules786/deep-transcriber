@@ -123,11 +123,18 @@ class EmbedTrainer:
                     output = self._run_single_batch(model,optimizer,loss_fn,data,phase="train")
                     loss['train'].append(output['loss'])
                 
-                print("valid phase")
                 for batch_num,data in enumerate(datalaoders['valid']):
                     output = self._run_single_batch(model,optimizer,loss_fn,data=data,phase="valid")
                     loss['valid'].append(output['loss'])
                 
+                for batch_num,data in enumerate(datalaoders['test']):
+                    utterances_1,utterances_2 = data.split(split_size=self.n_utterances//2,dim=1)
+                    utterances_1 = utterances_1.reshape(self.n_speakers*self.n_utterances//2,utterances_1.shape(2),utterances_1.shape(3))
+                    utterances_2 = utterances_2.reshape(self.n_speakers*self.n_utterances//2,utterances_2.shape(2),utterances_2.shape(3))
+                    utterances_emb_1 = model(utterances_1)
+                    utterances_emb_2 = model(utterances_2)
+                    
+
                 logging.info(f"Train loss epoch {epoch} : {np.mean(loss['train'])}")
                 logging.info(f"Valid loss epoch {epoch} : {np.mean(loss['valid'])}")
                 
@@ -140,7 +147,9 @@ class EmbedTrainer:
             mlflow.log_artifact(os.path.join(self.model_dir,"model.pt"))
             if os.path.exists("deep-transcriber.log"):
                 mlflow.log_artifact('deep-transcriber.log')
-                
+
+    def _EER(self,embedding_1,embedding_2):
+
     def _run_single_batch(
         self,model,optimizer,criterion,data,phase
     ):
@@ -180,7 +189,6 @@ class EmbedTrainer:
             "lr":self.lr},
 
         ]
-        print(optimizer_params)
         return optimizer_params
 
     def _prepare_dataloaders(
@@ -194,12 +202,17 @@ class EmbedTrainer:
         collate_fn = TimitCollate(n_speakers = self.n_speakers, n_utterances=self.n_utterances)
         train_dataset = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=collate_fn, drop_last=True)
 
-        valid_dataset = TimitDataset(directory=self.train, n_utterances=self.n_utterances,
+        valid_dataset = TimitDataset(directory=self.test, n_utterances=self.n_utterances,
                                         n_speakers = self.n_speakers)
         valid_dataset = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=collate_fn, drop_last=True)
+        
+        test_dataset = TimitDataset(directory=self.test, n_utterances=self.n_utterances,
+                                                n_speakers = self.n_speakers, return_tensors=True)
+        test_dataset = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=True,drop_last=True)
 
         return {"train":train_dataset,
-                "valid":valid_dataset}
+                "valid":valid_dataset,
+                "test":test_dataset}
 
 
 if __name__ == "__main__":
