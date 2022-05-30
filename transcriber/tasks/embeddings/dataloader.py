@@ -40,7 +40,7 @@ class TimitDataset(Dataset):
     ):
 
         npy_file = np.load(self.utterances[index])
-        utter_start = np.random.randint(0,npy_file.shape[0] - self.n_utterances)
+        utter_start = np.random.randint(0,npy_file.shape[0] - self.n_utterances + 1)
         utterances = npy_file[utter_start:utter_start+self.n_utterances]
         
         return utterances.transpose(0,2,1)
