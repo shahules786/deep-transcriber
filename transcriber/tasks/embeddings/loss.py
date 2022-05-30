@@ -36,4 +36,24 @@ class Ge2eLoss(nn.Module):
         loss = cross_entropy(cosine_sim,labels)
         return loss
         
+    
+    def equal_error_rate(embeddings_1,embeddings_2,N,M):
+        
+        centroid = embeddings_2.mean(dim=1)
+        sum_ = embeddings_2.sum(dim=1)
+        e = embeddings_1.view(N*M,-1)
+        cosine_sim = torch.mm(e,centroid.transpose(0,1))
+        for j in range(N):
+                for i in range(M):
+                    cj = (sum_[j] - e[j*M + i]) / (M - 1)
+                    cosine_sim[j*M + i][j] = torch.dot(cj, e[j*M + i])
+
+        labels = torch.zeros((N*M,),dtype=int,device=embeddings_1.device)
+        for i,j in enumerate(range(0,N*M,M)):
+            labels[j:j+M] = i
+        
+        eer_array = torch.stack([cosine_sim.max(dim=-1),labels,cosine_sim.argmax(dim=-1)])
+
+
+
         
