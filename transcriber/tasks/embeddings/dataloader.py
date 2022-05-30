@@ -14,12 +14,14 @@ class TimitDataset(Dataset):
         self,
         directory:str,
         n_speakers:int,
-        n_utterances:int
+        n_utterances:int,
+        return_tensors=False,
     ):
         self.directory = directory
         self.n_utterances = n_utterances
         self.n_speakers = n_speakers
         self.utterances = self.filter_utterances()
+        self.return_tensors = return_tensors
 
 
     def filter_utterances(
@@ -43,8 +45,10 @@ class TimitDataset(Dataset):
         utter_start = np.random.randint(0,npy_file.shape[0] - self.n_utterances + 1)
         utterances = npy_file[utter_start:utter_start+self.n_utterances]
         
-        return utterances.transpose(0,2,1)
-
+        if not self.return_tensors:
+            return utterances.transpose(0,2,1)
+        else:
+            return torch.from_numpy(utterances.transpose(0,2,1))
     def __len__(
         self,
 
