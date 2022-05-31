@@ -131,8 +131,8 @@ class EmbedTrainer:
                     utterances_1,utterances_2 = data.split(split_size=self.n_utterances//2,dim=1)
                     utterances_1 = utterances_1.reshape(self.n_speakers*self.n_utterances//2,utterances_1.shape[2],utterances_1.shape[3])
                     utterances_2 = utterances_2.reshape(self.n_speakers*self.n_utterances//2,utterances_2.shape[2],utterances_2.shape[3])
-                    utterances_emb_1 = model(utterances_1).reshape(self.n_speakers,self.n_utterances//2,self.embedding_dim)
-                    utterances_emb_2 = model(utterances_2).reshape(self.n_speakers,self.n_utterances//2,self.embedding_dim)
+                    utterances_emb_1 = model(utterances_1.to(self.device)).reshape(self.n_speakers,self.n_utterances//2,self.embedding_dim)
+                    utterances_emb_2 = model(utterances_2.to(self.device)).reshape(self.n_speakers,self.n_utterances//2,self.embedding_dim)
                     eer = equal_error_rate(utterances_emb_1, utterances_emb_2,self.n_speakers,self.n_utterances//2)
                     loss['EER'].append(eer)
 
