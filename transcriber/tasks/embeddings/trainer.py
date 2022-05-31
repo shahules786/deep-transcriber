@@ -11,7 +11,7 @@ from torch.optim import Adam,SGD
 from transcriber.tasks.embeddings.dataloader import TimitDataset,TimitCollate
 from transcriber.tasks.embeddings.model import Embeder
 from transcriber.tasks.utils import min_value_check, path_check
-from transcriber.tasks.embeddings.loss import Ge2eLoss
+from transcriber.tasks.embeddings.loss import Ge2eLoss, equal_error_rate
 
 
 class EmbedTrainer:
@@ -118,7 +118,7 @@ class EmbedTrainer:
         with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=self.run_name):
             
             for epoch in range(self.epochs):
-                loss = {"train":[], "valid": []}
+                loss = {"train":[], "valid": [], "EER":[]}
                 for batch_num,data in enumerate(datalaoders['train']):
                     output = self._run_single_batch(model,optimizer,loss_fn,data,phase="train")
                     loss['train'].append(output['loss'])
@@ -129,17 +129,19 @@ class EmbedTrainer:
                 
                 for batch_num,data in enumerate(datalaoders['test']):
                     utterances_1,utterances_2 = data.split(split_size=self.n_utterances//2,dim=1)
-                    utterances_1 = utterances_1.reshape(self.n_speakers*self.n_utterances//2,utterances_1.shape(2),utterances_1.shape(3))
-                    utterances_2 = utterances_2.reshape(self.n_speakers*self.n_utterances//2,utterances_2.shape(2),utterances_2.shape(3))
-                    utterances_emb_1 = model(utterances_1)
-                    utterances_emb_2 = model(utterances_2)
-                    
+                    utterances_1 = utterances_1.reshape(self.n_speakers*self.n_utterances//2,utterances_1.shape[2],utterances_1.shape[3])
+                    utterances_2 = utterances_2.reshape(self.n_speakers*self.n_utterances//2,utterances_2.shape[2],utterances_2.shape[3])
+                    utterances_emb_1 = model(utterances_1).reshape(self.n_speakers,self.n_utterances//2,self.embedding_dim)
+                    utterances_emb_2 = model(utterances_2).reshape(self.n_speakers,self.n_utterances//2,self.embedding_dim)
+                    eer = equal_error_rate(utterances_emb_1, utterances_emb_2,self.n_speakers,self.n_utterances//2)
+                    loss['EER'].append(eer)
 
                 logging.info(f"Train loss epoch {epoch} : {np.mean(loss['train'])}")
                 logging.info(f"Valid loss epoch {epoch} : {np.mean(loss['valid'])}")
                 
                 mlflow.log_metrics({"Train Loss":np.mean(loss['train'])},step=epoch)
                 mlflow.log_metrics({"Valid Loss":np.mean(loss['valid'])},step=epoch)
+                mlflow.log_metrics({"Valid EER":np.mean(loss['EER'])},step=epoch)
 
 
             logging.info("Training Finished. Saving model..")
@@ -148,7 +150,6 @@ class EmbedTrainer:
             if os.path.exists("deep-transcriber.log"):
                 mlflow.log_artifact('deep-transcriber.log')
 
-    def _EER(self,embedding_1,embedding_2):
 
     def _run_single_batch(
         self,model,optimizer,criterion,data,phase
@@ -200,15 +201,15 @@ class EmbedTrainer:
         train_dataset = TimitDataset(directory=self.train, n_utterances=self.n_utterances,
                                         n_speakers = self.n_speakers)
         collate_fn = TimitCollate(n_speakers = self.n_speakers, n_utterances=self.n_utterances)
-        train_dataset = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=collate_fn, drop_last=True)
+        train_dataset = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=False, collate_fn=collate_fn, drop_last=True)
 
         valid_dataset = TimitDataset(directory=self.test, n_utterances=self.n_utterances,
                                         n_speakers = self.n_speakers)
-        valid_dataset = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=True, collate_fn=collate_fn, drop_last=True)
+        valid_dataset = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=False, collate_fn=collate_fn, drop_last=True)
         
         test_dataset = TimitDataset(directory=self.test, n_utterances=self.n_utterances,
                                                 n_speakers = self.n_speakers, return_tensors=True)
-        test_dataset = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=True,drop_last=True)
+        test_dataset = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False,drop_last=True)
 
         return {"train":train_dataset,
                 "valid":valid_dataset,

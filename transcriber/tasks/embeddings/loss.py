@@ -37,8 +37,9 @@ class Ge2eLoss(nn.Module):
         return loss
         
     
-    def equal_error_rate(embeddings_1,embeddings_2,N,M):
+def equal_error_rate(embeddings_1,embeddings_2,N,M):
         
+    with torch.no_grad():
         centroid = embeddings_2.mean(dim=1)
         sum_ = embeddings_2.sum(dim=1)
         e = embeddings_1.view(N*M,-1)
@@ -52,8 +53,31 @@ class Ge2eLoss(nn.Module):
         for i,j in enumerate(range(0,N*M,M)):
             labels[j:j+M] = i
         
-        eer_array = torch.stack([cosine_sim.max(dim=-1),labels,cosine_sim.argmax(dim=-1)])
-
-
+        eers=0.0
+        for i in range(N):
+            y, y_score = (labels==i).int(),cosine_sim[:,i]
+            eer,thresh = calculate_eer(y,y_score)
+            eers += eer
+        return eers/N        
+    
+def calculate_eer(y, y_score, pos=1):
+    """ 
+    Method to compute eer, retrieved from https://github.com/a-nagrani/VoxSRC2020/blob/master/compute_EER.py 
+    `y` is tensor of (cnt, ) of labels (0 or 1)
+    `y_score` is tensor of (cnt, ) of similarity scores
+    `pos` is the positive label, 99% of the time leave it as 1.
+    """
+    try:
+        from scipy.interpolate import interp1d
+        from scipy.optimize import brentq
+        from sklearn.metrics import roc_curve
+    except ModuleNotFoundError: 
+        raise ModuleNotFoundError("Problem: for EER metrics, you require scipy and sklearn. Please install them first.")
+    y = y.numpy()
+    y_score = y_score.numpy()
+    fpr, tpr, thresholds = roc_curve(y, y_score, pos_label=pos)
+    eer = brentq(lambda x : 1. - x - interp1d(fpr, tpr)(x), 0., 1.)
+    thresh = interp1d(fpr, thresholds)(eer)
+    return eer, thresh
 
         
