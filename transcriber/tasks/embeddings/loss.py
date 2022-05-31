@@ -73,8 +73,8 @@ def calculate_eer(y, y_score, pos=1):
         from sklearn.metrics import roc_curve
     except ModuleNotFoundError: 
         raise ModuleNotFoundError("Problem: for EER metrics, you require scipy and sklearn. Please install them first.")
-    y = y.numpy()
-    y_score = y_score.numpy()
+    y = y.cpu().numpy()
+    y_score = y_score.cpu().numpy()
     fpr, tpr, thresholds = roc_curve(y, y_score, pos_label=pos)
     eer = brentq(lambda x : 1. - x - interp1d(fpr, tpr)(x), 0., 1.)
     thresh = interp1d(fpr, thresholds)(eer)
