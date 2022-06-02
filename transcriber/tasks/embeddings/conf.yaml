@@ -11,11 +11,11 @@ model:
   model_dir: './model/'
 
 training:
-  n_speakers: 10
-  n_utterances: 5     ##even
+  n_speakers: 5
+  n_utterances: 4     ##even
   batch_size: 5
   lr: 0.01
-  epochs: 20
+  epochs: 1000
   experiment_name: 'deep-transcriber'
   run_name: 'baseline'
 
