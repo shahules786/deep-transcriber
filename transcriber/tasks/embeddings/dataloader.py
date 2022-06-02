@@ -22,6 +22,7 @@ class TimitDataset(Dataset):
         self.n_speakers = n_speakers
         self.utterances = self.filter_utterances()
         self.return_tensors = return_tensors
+        print("Length of dataset",len(self.utterances))
 
 
     def filter_utterances(
