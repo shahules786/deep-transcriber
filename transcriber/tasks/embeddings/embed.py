@@ -22,7 +22,11 @@ class PretrainedEmbeder:
             config = load_file_hf("config.json",model_id,revision_id)
             model = load_file_hf("pytorch.pt",model_id,revision_id)
             
-        self.device = device ##change
+        if device in ("cpu","cuda"):
+            self.device = torch.device(device)
+        else:
+            raise ValueError("device should be either 'cpu' or 'cuda'")
+            
         self.model = self._load_model(model,config)
          
     def _load_model(self,model_path, config_path):
