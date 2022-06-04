@@ -1,7 +1,12 @@
 # Byte-compiled / optimized / DLL files
+/mlruns
+model/
 __pycache__/
 .DS_store
-/data
+/data/train
+/data/test/
+/data/lisa/
+
 *.py[cod]
 *$py.class
 
@@ -129,3 +134,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+data/kaggle.json

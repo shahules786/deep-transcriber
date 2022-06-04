@@ -7,7 +7,7 @@ import librosa
 from argparse import ArgumentParser
 from tqdm import tqdm
 import shutil
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 
 
 
@@ -37,6 +37,7 @@ class ProcessTimit:
 
         if not os.path.exists(self.output):
             os.mkdir(self.output)
+            logging.info("Directory created..")
         else:
             logging.info("DELETING OLD FILES..")
             for file in glob.glob(os.path.join(self.output,"*")):
@@ -69,8 +70,8 @@ class ProcessTimit:
             for interval in audio_intervals:
                 if interval[1]-interval[0] > self.min_utterance_len:
                     audio_utter = audio[interval[0]:interval[1]]
-                    mel_spec = librosa.feature.melspectrogram(y=audio_utter,
-                    sr=sr,n_fft=self.n_fft,hop_length=self.hop_length,win_length=self.win_length)
+                    mel_spec = np.log10(librosa.feature.melspectrogram(y=audio_utter,
+                    sr=sr,n_fft=self.n_fft,hop_length=self.hop_length,win_length=self.win_length,n_mels=40))
                     utterances.append(mel_spec[:,:self.frames])
                     utterances.append(mel_spec[:,-self.frames:])
         return np.array(utterances)
@@ -81,8 +82,8 @@ if __name__ == "__main__":
     parser.add_argument("--directory", type=str, help="Directory with files")  #/Users/shahules/Myprojects/deep-transcriber/data/lisa/data/timit/raw/TIMIT
     parser.add_argument("--output", type=str, help="Directory to write output files")    #/Users/shahules/Myprojects/deep-transcriber/data/output
     parser.add_argument("--sampling_rate", type=int, help="Sampling rate", default=16000)
-    parser.add_argument("--num_dilects", type=int, help="Number of dialects to process", default=1)
-    parser.add_argument("--n_fft", type=int, help="Hop length for STFT", default=512)
+    parser.add_argument("--num_dilects", type=int, help="Number of dialects to process", default=8)
+    parser.add_argument("--n_fft", type=int, help="N fft", default=512)
     parser.add_argument("--hop_length", type=int, help="Hop length for STFT", default=160)
     parser.add_argument("--win_length", type=int, help="Window length for STFT", default=400)
     parser.add_argument("--frames", type=int, help="mel spectrogram frames to save", default=180)
