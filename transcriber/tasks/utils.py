@@ -3,6 +3,7 @@ import logging
 import os
 import json
 import zipfile
+import numpy as np
 from huggingface_hub import cached_download, hf_hub_url
 
 
@@ -40,6 +41,10 @@ def load_file_hf(filename, model_id, revision_id):
             )
     return path
 
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
 
 if __name__ == "__main__":
     download_data_kaggle()
