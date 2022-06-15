@@ -2,10 +2,11 @@
 import logging
 import os
 import json
+from random import Random
 import zipfile
 import numpy as np
 from huggingface_hub import cached_download, hf_hub_url
-
+import torch
 
 
 def min_value_check(arg,value):
@@ -46,5 +47,20 @@ def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum()
 
-if __name__ == "__main__":
-    download_data_kaggle()
+
+def random_generation():
+    
+    rng = Random()
+    global_seed = int(os.environ.get("SEED","1000"))
+    worker_info = torch.utils.data.get_worker_info()
+
+    if worker_info is None:
+        num_workers = 1
+        worker_id = 0
+    else:
+        num_workers = worker_info.num_workers
+        worker_id = worker_info.id
+
+    rng.seed(global_seed*worker_id+num_workers)
+    return rng
+
