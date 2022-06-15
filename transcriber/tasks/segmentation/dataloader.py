@@ -1,7 +1,9 @@
+import itertools
 from random import sample
 from torch.utils.data import IterableDataset
 import numpy as np
 import librosa
+import torch
 from pyannote.core import Segment
 
 from transcriber.tasks.utils import softmax
@@ -44,9 +46,8 @@ class AMIDataset(IterableDataset):
         chunk = Segment(start_time,start_time+self.duration)
         audio,sr = librosa.load(file["audio"],sr=self.sampling_rate)
         start,end = chunk.start*sr,chunk.end*sr
-        sample["X"] = audio[int(start):int(end)]
+        sample["X"] = np.array(audio[int(start):int(end)])
         sample['y'] = file['annotation'].discretize(chunk,duration=self.duration)
-        print(sample["X"].shape,sample['y'].data.shape)
         yield sample
 
     def __iter__helper(
@@ -67,4 +68,35 @@ class AMIDataset(IterableDataset):
         return self.__iter__helper()
 
     
+class AMICollate:
+
+    def __init__(
+        self,
+        ):
+        pass 
+
+    def __call__(
+        self,
+        batch
+    ):
+       
+        output = {"X":[],"y":[]}
+        for b in batch:
+            output["X"].append(b['X'])
+            print(b["y"].labels)
+        
+        labels = list(set(itertools.chain(*(b["y"].labels for b in batch))))
+        y_batch = torch.zeros((len(batch),batch[0]["y"].data.shape[0],len(labels)))
+
+        for b,sample in enumerate(batch):
+            for local_idx,label in enumerate(sample["y"].labels):
+                global_idx = labels.index(label)
+                y_batch[b,:,global_idx] = torch.from_numpy(sample["y"].data[:,local_idx])
+
+        output["X"] = torch.from_numpy(np.array(output["X"]))
+        output["y"] = y_batch
+          
+        return output
     
+
+
