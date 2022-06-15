@@ -6,7 +6,7 @@ import librosa
 import torch
 from pyannote.core import Segment
 
-from transcriber.tasks.utils import softmax
+from transcriber.tasks.utils import softmax,random_generation
 
 
 
@@ -39,29 +39,38 @@ class AMIDataset(IterableDataset):
     def get_chunks(
         self,
         file,
-        segment
+        chunk
     ):
         sample = dict()
-        start_time = np.random.uniform(segment.start,segment.end-self.duration)
-        chunk = Segment(start_time,start_time+self.duration)
         audio,sr = librosa.load(file["audio"],sr=self.sampling_rate)
         start,end = chunk.start*sr,chunk.end*sr
         sample["X"] = np.array(audio[int(start):int(end)])
         sample['y'] = file['annotation'].discretize(chunk,duration=self.duration)
-        yield sample
+        return sample
+
+    def random_select(
+        self,
+        rng
+        ):
+        while True:
+            file = rng.choices(self.data,weights=[sample['annotated_duration'] for sample in self.data])
+            segment = rng.choices(file['annotated'],
+                                    p=softmax([segment.duration for segment in file['annotated']])
+                                    )
+            
+            start_time = rng.uniform(segment.start,segment.end-self.duration)
+            chunk = Segment(start_time,start_time+self.duration)
+            sample = self.get_chunks(file,chunk)
+            print(file['audio'])
+            yield sample
 
     def __iter__helper(
         self,
     ):
-
+        rng = random_generation()   ##not reproducible
         while True:
-
-            file = np.random.choice(self.data,p=softmax([sample['annotated_duration'] for sample in self.data]))
-            segment = np.random.choice(file['annotated'],
-                                p=softmax([segment.duration for segment in file['annotated']])
-                                )
-        
-            chunks = self.get_chunks(file,segment)
+  
+            chunks = self.random_select(rng)
             yield next(chunks)
 
     def __iter__(self):
@@ -83,7 +92,6 @@ class AMICollate:
         output = {"X":[],"y":[]}
         for b in batch:
             output["X"].append(b['X'])
-            print(b["y"].labels)
         
         labels = list(set(itertools.chain(*(b["y"].labels for b in batch))))
         y_batch = torch.zeros((len(batch),batch[0]["y"].data.shape[0],len(labels)))
