@@ -5,6 +5,7 @@ import numpy as np
 import librosa
 import torch
 from pyannote.core import Segment
+import math
 
 from transcriber.tasks.utils import softmax,random_generation
 
@@ -36,7 +37,7 @@ class AMIDataset(IterableDataset):
                 file[key]=value
             self.data.append(file)
 
-    def get_chunks(
+    def prepare_chunk(
         self,
         file,
         chunk
@@ -44,25 +45,25 @@ class AMIDataset(IterableDataset):
         sample = dict()
         audio,sr = librosa.load(file["audio"],sr=self.sampling_rate)
         start,end = chunk.start*sr,chunk.end*sr
-        sample["X"] = np.array(audio[int(start):int(end)])
+        sample["X"] = np.array(audio[math.ceil(start):math.ceil(end)])
         sample['y'] = file['annotation'].discretize(chunk,duration=self.duration)
         return sample
 
-    def random_select(
+    def select_chunk(
         self,
         rng
         ):
         while True:
-            file = rng.choices(self.data,weights=[sample['annotated_duration'] for sample in self.data])
+            file = rng.choices(self.data,
+                            weights=[sample['annotated_duration'] for sample in self.data],
+                            k=1)[0]
             segment = rng.choices(file['annotated'],
-                                    p=softmax([segment.duration for segment in file['annotated']])
-                                    )
+                                weights=[segment.duration for segment in file['annotated']],
+                                k=1)[0]
             
             start_time = rng.uniform(segment.start,segment.end-self.duration)
             chunk = Segment(start_time,start_time+self.duration)
-            sample = self.get_chunks(file,chunk)
-            print(file['audio'])
-            yield sample
+            yield self.prepare_chunk(file,chunk)
 
     def __iter__helper(
         self,
@@ -70,11 +71,14 @@ class AMIDataset(IterableDataset):
         rng = random_generation()   ##not reproducible
         while True:
   
-            chunks = self.random_select(rng)
+            chunks = self.select_chunk(rng)
             yield next(chunks)
 
     def __iter__(self):
         return self.__iter__helper()
+
+    def __len__(self):
+        return sum([file["annotated_duration"] for file in self.data])//self.duration
 
     
 class AMICollate:
