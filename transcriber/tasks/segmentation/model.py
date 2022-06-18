@@ -1,4 +1,5 @@
 from torch import nn
+from torch.nn.functional import conv1d
 import torch
 import logging
 import numpy as np
@@ -50,9 +51,33 @@ class SincConv(nn.Module):
 
         N = torch.linspace(0,(self.kernel_size/2)-1,self.kernel_size//2)
         self.hanning_window = 0.54 - 0.46*torch.cos(2*torch.pi*N/self.kernel_size)
-        self.N = 2*torch.pi*torch.linspace(-1*self.kernel_size//2,0)/self.sampling_rate
+        self.two_pi_n = 2*torch.pi*torch.linspace(-1*self.kernel_size//2,0)/self.sampling_rate
 
 
     def forward(
-        self
+        self,
+        sample
     ):
+        self.two_pi_n = self.two_pi_n.to(sample.device)
+        self.hanning_window = self.hanning_window.to(sample.device)
+
+        f1_cutoff_freq = self.freq_low + torch.abs(self.lower_freq_hertz)
+        f2_cutoff_freq = torch.clamp(f1_cutoff_freq+self.min_bandwidth_freq+torch.abs(self.bandwidth_hertz),
+                                        self.freq_low,self.sampling_rate/2)
+        
+        f1_cutoff_freq = torch.matmul(f1_cutoff_freq,self.two_pi_n)
+        f2_cutoff_freq = torch.matmul(f2_cutoff_freq,self.two_pi_n)
+
+        band_pass_left = (torch.sin(f2_cutoff_freq) - torch.sin(f1_cutoff_freq))/(self.two_pi_n//2)
+
+        band_pass = torch.cat([band_pass_left*self.hanning_window,
+                                (f2_cutoff_freq-f1_cutoff_freq)[:,0],
+                                   torch.flip(band_pass_left*self.hanning_window,dims=[1])
+                                   ]) / (2*(f2_cutoff_freq-f1_cutoff_freq).unsqueeze(1))
+        
+        self.filters = band_pass.reshape(self.out_channels,1,self.kernel_size)
+        
+        return conv1d(sample,self.filters,padding=self.padding,
+                        stride=self.stride,dilation=self.dilation,
+                        bias=None)
+
