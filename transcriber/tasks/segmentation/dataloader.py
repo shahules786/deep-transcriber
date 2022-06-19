@@ -46,6 +46,8 @@ class AMIDataset(IterableDataset):
         audio,sr = librosa.load(file["audio"],sr=self.sampling_rate)
         start,end = chunk.start*sr,chunk.end*sr
         sample["X"] = np.array(audio[math.ceil(start):math.ceil(end)])
+        if len(sample["X"].shape)==1:
+            sample["X"] = sample["X"].reshape(1,-1)
         sample['y'] = file['annotation'].discretize(chunk,duration=self.duration)
         return sample
 
