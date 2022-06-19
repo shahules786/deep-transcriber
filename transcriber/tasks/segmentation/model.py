@@ -1,4 +1,4 @@
-from torch import nn
+from torch import dropout, nn
 from torch.nn.functional import conv1d
 import torch
 import logging
@@ -85,3 +85,51 @@ class SincConv(nn.Module):
                         stride=self.stride,dilation=self.dilation,
                         bias=None, groups=1)
 
+class SincNet(nn.Module):
+
+    def __init__(
+        self,
+    ):
+        super().__init__()
+
+        self.conv1d = nn.ModuleList()
+        self.pool1d = nn.ModuleList()
+        self.layernorm1d = nn.ModuleList()
+        self.dropout1d = nn.ModuleList()
+
+        self.conv1d.append(
+            SincConv(out_channels=80,
+            kernel_size=251)
+        )
+        self.pool1d.append(nn.MaxPool1d(3,stride=3,padding=0,dilation=1))
+        self.layernorm1d.append(nn.InstanceNorm1d(80,affine=True))
+        self.dropout1d(nn.Dropout(0.1))
+        
+        self.conv1d.append(nn.Conv1d(80, 60, 5, stride=1))
+        self.pool1d.append(nn.MaxPool1d(3, stride=3, padding=0, dilation=1))
+        self.layernorm1d.append(nn.InstanceNorm1d(60, affine=True))
+        self.dropout1d(nn.Dropout(0.1))
+
+
+        self.conv1d.append(nn.Conv1d(60, 60, 5, stride=1))
+        self.pool1d.append(nn.MaxPool1d(3, stride=3, padding=0, dilation=1))
+        self.layernorm1d.append(nn.InstanceNorm1d(60, affine=True))
+        self.dropout1d(nn.Dropout(0.1))
+        self.activation = nn.LeakyReLU()
+
+    def forward(
+        self,
+        sample
+    ):
+        output = sample ##change
+        for i,(conv,pool,norm,drop) in enumerate(
+                                        zip(self.conv1d,self.pool1d,
+                                        self.layernorm1d,self.dropout1d)
+        ):
+            output = conv(output)
+            if i == 0:
+                output = torch.abs(output)
+
+            output = drop(self.activation(norm(pool(output))))
+        
+        return output
