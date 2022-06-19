@@ -47,6 +47,11 @@ def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum()
 
+def hertz_to_mel(x):
+    return 2595 * np.log10(1 + x / 700)
+
+def mel_to_hertz(x):
+    return 700 * (10 ** (x / 2595) - 1)
 
 def random_generation():
     
