@@ -1,3 +1,4 @@
+from unicodedata import bidirectional
 from torch import dropout, nn
 from torch.nn.functional import conv1d
 import torch
@@ -70,7 +71,7 @@ class SincConv(nn.Module):
         f1_cutoff_freq = torch.matmul(f1_cutoff_freq,self.two_pi_n)
         f2_cutoff_freq = torch.matmul(f2_cutoff_freq,self.two_pi_n)
 
-        band_pass_left = (torch.sin(f2_cutoff_freq) - torch.sin(f1_cutoff_freq))/(self.two_pi_n//2)
+        band_pass_left = (torch.sin(f2_cutoff_freq) - torch.sin(f1_cutoff_freq))/(torch.div(self.two_pi_n,2,rounding_mode="floor"))
         band_pass_left *= self.hanning_window
         centre =  torch.unsqueeze((f2_cutoff_freq-f1_cutoff_freq)[:,0],1)
 
@@ -103,18 +104,18 @@ class SincNet(nn.Module):
         )
         self.pool1d.append(nn.MaxPool1d(3,stride=3,padding=0,dilation=1))
         self.layernorm1d.append(nn.InstanceNorm1d(80,affine=True))
-        self.dropout1d(nn.Dropout(0.1))
+        self.dropout1d.append(nn.Dropout(0.1))
         
         self.conv1d.append(nn.Conv1d(80, 60, 5, stride=1))
         self.pool1d.append(nn.MaxPool1d(3, stride=3, padding=0, dilation=1))
         self.layernorm1d.append(nn.InstanceNorm1d(60, affine=True))
-        self.dropout1d(nn.Dropout(0.1))
+        self.dropout1d.append(nn.Dropout(0.1))
 
 
         self.conv1d.append(nn.Conv1d(60, 60, 5, stride=1))
         self.pool1d.append(nn.MaxPool1d(3, stride=3, padding=0, dilation=1))
         self.layernorm1d.append(nn.InstanceNorm1d(60, affine=True))
-        self.dropout1d(nn.Dropout(0.1))
+        self.dropout1d.append(nn.Dropout(0.1))
         self.activation = nn.LeakyReLU()
 
     def forward(
@@ -133,3 +134,26 @@ class SincNet(nn.Module):
             output = drop(self.activation(norm(pool(output))))
         
         return output
+
+class SegmentNet(nn.Module):
+
+    def __init__(
+        self,
+        
+    ):
+        self.sincnet = SincNet()
+        self.lstm = nn.LSTM(input_size=60, hidden_size=128, num_layers=4, bidirectional=True, dropout=0.0)
+        self.classifier = nn.ModuleList(128*2,4)
+        self.activation = nn.Sigmoid()
+
+    def forward(
+        self,
+        sample
+    ):
+        output = self.sincnet(sample)
+        output,hidden = self.lstm(output)
+        output = self.activation(self.classifier(output))
+
+        return output
+
+
