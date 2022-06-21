@@ -93,6 +93,8 @@ class SincNet(nn.Module):
     ):
         super().__init__()
 
+        self.wave_norm1d = nn.InstanceNorm1d(1,affine=True)
+
         self.conv1d = nn.ModuleList()
         self.pool1d = nn.ModuleList()
         self.layernorm1d = nn.ModuleList()
@@ -122,7 +124,7 @@ class SincNet(nn.Module):
         self,
         sample
     ):
-        output = sample ##change
+        output = self.wave_norm1d(sample) 
         for i,(conv,pool,norm,drop) in enumerate(
                                         zip(self.conv1d,self.pool1d,
                                         self.layernorm1d,self.dropout1d)
