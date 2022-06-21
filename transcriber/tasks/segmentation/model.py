@@ -151,7 +151,7 @@ class SegmentNet(nn.Module):
         sample
     ):
         output = self.sincnet(sample)
-        output,hidden = self.lstm(output)
+        output,_ = self.lstm(output)
         output = self.activation(self.classifier(output))
 
         return output
