@@ -1,5 +1,4 @@
 import itertools
-from random import sample
 from torch.utils.data import IterableDataset
 import numpy as np
 import librosa
@@ -9,16 +8,13 @@ import math
 
 from transcriber.tasks.utils import softmax,random_generation
 
-
-
-
 class AMIDataset(IterableDataset):
 
     def __init__(
         self,
         protocol,
-        duration=5,
-        sampling_rate=None,
+        duration=2,
+        sampling_rate=16000,
         phase="train"
     ):
 
@@ -54,7 +50,7 @@ class AMIDataset(IterableDataset):
     def select_chunk(
         self,
         rng
-        ):
+    ):
         while True:
             file = rng.choices(self.data,
                             weights=[sample['annotated_duration'] for sample in self.data],
@@ -87,7 +83,7 @@ class AMICollate:
 
     def __init__(
         self,
-        ):
+    ):
         pass 
 
     def __call__(
