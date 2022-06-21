@@ -57,6 +57,47 @@ class PIT_Optimal:
 
 
             
+class losses:
+
+    def __init__(
+        self,
+        loss:str="bce"
+    ):
+
+        self.loss = loss
+
+    def segmentation_loss(
+        self,
+        input:torch.tensor,
+        target:torch.tensor
+    ):
+
+        if self.loss == "bce":
+            return F.binary_cross_entropy(input,target)
+        elif self.loss == "mse":
+            return F.mse_loss(input, target)
+        else:
+            raise ValueError("loss should be either 'bce' or 'mse'")
+
+    def vad_loss(
+        self,
+        input:torch.tensor,
+        target:torch.tensor
+    ):
+        
+        input,_ = torch.max(input,dim=2,keepdim=True)
+        target,_ = torch.max(target,dim=2,keepdim=False)
+
+        if self.loss == "bce":
+            return F.binary_cross_entropy(input, target)
+        elif self.loss == "mse":
+            return F.mse_loss(input, target)
+        else:
+            raise ValueError("loss should be either 'bce' or 'mse'")
+
+
+
+
 
 
         
