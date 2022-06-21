@@ -13,13 +13,13 @@ def min_value_check(arg,value):
     if arg<=value:
         raise ValueError(f"{str(arg)} should be greater than or equal to {value}")
         
-    return True
+    return value
     
 def path_check(path):
 
     if not os.path.exists(path):
         raise FileNotFoundError(f"File {path} does not exists")
-    return True
+    return path
 
 def download_data_kaggle(file_name='programmerrdai/house-price-to-the-moon',save_path:str="./data/"):
 
