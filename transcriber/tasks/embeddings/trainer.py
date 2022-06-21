@@ -14,7 +14,7 @@ from transcriber.tasks.utils import min_value_check, path_check
 from transcriber.tasks.embeddings.loss import Ge2eLoss, equal_error_rate
 
 
-class EmbedTrainer:
+class Trainer:
 
     def __init__(
         self,
@@ -25,17 +25,10 @@ class EmbedTrainer:
         model_dir : str,
         logger:str = "DEBUG"
     ):
-        if min_value_check(input_size,0):
-            self.input_size = input_size
-
-        if min_value_check(num_layers,0):
-            self.num_layers = num_layers
-
-        if min_value_check(hidden_size,0):
-            self.hidden_size = hidden_size
-
-        if min_value_check(embedding_dim,0):
-            self.embedding_dim = embedding_dim
+        self.input_size = min_value_check(input_size,0)
+        self.num_layers = min_value_check(num_layers,0)
+        self.hidden_size = min_value_check(hidden_size,0)
+        self.embedding_dim = min_value_check(embedding_dim,0)
 
         self._device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -43,8 +36,7 @@ class EmbedTrainer:
             logging.info(f"Creating {model_dir}...")
             os.mkdir(model_dir)
 
-        if path_check(model_dir):
-            self.model_dir = model_dir
+        self.model_dir = path_check(model_dir)
 
         if logger in ("DEBUG","INFO","WARN"):
             logging.basicConfig(filename='deep-transcriber.log', filemode='w',
@@ -82,23 +74,13 @@ class EmbedTrainer:
 
         
     ):
-        if path_check(train):
-            self.train = train
+        self.train = path_check(train)
+        self.test = path_check(test)
 
-        if path_check(test):
-            self.test = test
-
-        if min_value_check(batch_size,0):
-            self.batch_size = batch_size
-
-        if min_value_check(epochs,0):
-            self.epochs = epochs
-
-        if min_value_check(n_speakers,0):
-            self.n_speakers = n_speakers
-
-        if min_value_check(n_utterances,0):
-            self.n_utterances = n_utterances
+        self.batch_size = min_value_check(batch_size,1)
+        self.epochs = min_value_check(epochs,1)
+        self.n_speakers = min_value_check(n_speakers,1)
+        self.n_utterances = min_value_check(n_utterances,1)
         
         self.lr = lr
 
@@ -221,7 +203,7 @@ if __name__ == "__main__":
     with open('transcriber/tasks/embeddings/conf.yaml') as file:
         args = yaml.full_load(file)
 
-    trainer = EmbedTrainer(input_size=args["model"]["input_size"],
+    trainer = Trainer(input_size=args["model"]["input_size"],
                             hidden_size=args["model"]["hidden_size"],
                             num_layers=args["model"]["num_layers"],
                             embedding_dim=args["model"]["embedding_dim"],
