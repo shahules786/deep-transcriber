@@ -4,6 +4,8 @@ from typing import Optional
 from torch.utils.data import DataLoader
 from torch.optim import Adam
 import mlflow 
+import logging
+import numpy as np
 
 
 from transcriber.tasks.utils import min_value_check
@@ -17,9 +19,9 @@ class Trainer:
     def __init__(
         self,
         protocol:Protocol,
-        duration:float=2.0,
+        duration:float=5.0,
         batch_size:int=16,
-        epochs:int=5,
+        epochs:int=1,
         learning_rate:float=1e-5,
         device:str="cpu",
         sampling_rate:int=16000
@@ -61,17 +63,30 @@ class Trainer:
 
             for epoch in range(self.epochs):
                 loss_dict = {"train":[],"developement":[]}
+
+                phase = "train"
                 for batch,data in enumerate(dataloaders["train"]):
-                    phase = "train"
+                    predition,batch_loss_dict = self._run_single_batch(
+                        model=model,data=data,optimizer=optimizer,
+                        loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
+                    )
+                    loss_dict[phase].append(batch_loss_dict["total_loss"])
+                
+                phase = "developement"
+                for batch,data in enumerate(dataloaders["train"]):
                     predition,batch_loss_dict = self._run_single_batch(
                         model=model,data=data,optimizer=optimizer,
                         loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
                     )
                     loss_dict[phase].append(batch_loss_dict["total_loss"])
 
+                logging.info(f"Train loss epoch {epoch} : {np.mean(loss_dict['train'])}")
+                logging.info(f"Valid loss epoch {epoch} : {np.mean(loss_dict['developement'])}")
+                
+                mlflow.log_metrics({"Train Loss":np.mean(loss_dict['train'])},step=epoch)
+                mlflow.log_metrics({"Valid Loss":np.mean(loss_dict['developement'])},step=epoch)
 
                     
-
     def _run_single_batch(
         self,
         data,
