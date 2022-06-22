@@ -1,0 +1,13 @@
+Data:
+  database : /Users/shahules/Myprojects/AMI-diarization-setup/pyannote/database.yml
+
+Training:
+  duration : 5
+  batch_size : 16
+  epochs : 1
+  learning_rate : 0.0001
+  sampling_rate : 16000
+  device : cpu
+  experiment_name : Speaker-Segmentation
+  run_name : Baseline
+  
