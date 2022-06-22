@@ -9,9 +9,9 @@ from huggingface_hub import cached_download, hf_hub_url
 import torch
 
 
-def min_value_check(arg,value):
-    if arg<=value:
-        raise ValueError(f"{str(arg)} should be greater than or equal to {value}")
+def min_value_check(arg,value,name):
+    if arg<value:
+        raise ValueError(f"{str(name)} should be greater than or equal to {value}")
         
     return value
     
