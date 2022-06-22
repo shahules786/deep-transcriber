@@ -29,19 +29,21 @@ class Trainer:
         sampling_rate:int=16000
     ):
         self.protocol = protocol
-        self.duration = min_value_check(duration,1.0)
-        self.batch_size = min_value_check(batch_size,2)
-        self.epochs = min_value_check(epochs,1)
+        self.duration = min_value_check(duration,1.0,"duration")
+        self.batch_size = min_value_check(batch_size,2,"batch size")
+        self.epochs = min_value_check(epochs,1,"epochs")
         self.learning_rate = learning_rate
         self.sampling_rate = sampling_rate
 
         if device not in ("cpu","cuda"):
             raise ValueError("device should be cpu or cuda")
-        else:
+        elif device == "cuda":
             if getattr(torch,device).is_available():
                 self.device = torch.device(device)
             else:
                 raise ValueError(f"{device} not available!")
+        else:
+            self.device = torch.device(device)
 
     def train(
         self,
@@ -105,7 +107,7 @@ class Trainer:
         else:
             model.eval()
 
-        input_waveform, target = data.items()
+        input_waveform, target = data.values()
         prediction = model(input_waveform)
         min_weight_perumuation, _ = Permutation(prediction,target.data)
         seg_loss = loss_obj.segmentation_loss(min_weight_perumuation,target.data)
@@ -148,9 +150,9 @@ if __name__ == "__main__":
     from pyannote.database import add_custom_protocols
     from pyannote.database import FileFinder
     
-    preprocessors = {'audio': FileFinder()}
     os.environ["PYANNOTE_DATABASE_CONFIG"] = args["Data"]["database"]
 
+    preprocessors = {'audio': FileFinder()}
     database,task = add_custom_protocols()
     name = 'AMI.SpeakerDiarization.only_words'
     database_name, task_name, protocol_name = name.split(".")
@@ -160,7 +162,7 @@ if __name__ == "__main__":
     protocol.name = name
 
     trainer = Trainer(
-        Protocol=protocol,
+        protocol=protocol,
         duration=args["Training"]["duration"],
         batch_size=args["Training"]["batch_size"],
         epochs=args["Training"]['epochs'],
