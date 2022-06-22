@@ -6,6 +6,8 @@ from torch.optim import Adam
 import mlflow 
 import logging
 import numpy as np
+import yaml
+import os
 
 
 from transcriber.tasks.utils import min_value_check
@@ -136,3 +138,36 @@ class Trainer:
 
         return {"train":train_dataset,
                 "development":dev_dataset}
+
+
+if __name__ == "__main__":
+
+    with open('transcriber/tasks/segmentation/conf.yaml') as file:
+        args = yaml.full_load(file)
+
+    from pyannote.database import add_custom_protocols
+    from pyannote.database import FileFinder
+    
+    preprocessors = {'audio': FileFinder()}
+    os.environ["PYANNOTE_DATABASE_CONFIG"] = args["Data"]["database"]
+
+    database,task = add_custom_protocols()
+    name = 'AMI.SpeakerDiarization.only_words'
+    database_name, task_name, protocol_name = name.split(".")
+    protocol = database[database_name]().get_protocol(
+        task=task_name,protocol=protocol_name, preprocessors=preprocessors
+    )
+    protocol.name = name
+
+    trainer = Trainer(
+        Protocol=protocol,
+        duration=args["Training"]["duration"],
+        batch_size=args["Training"]["batch_size"],
+        epochs=args["Training"]['epochs'],
+        learning_rate=args["Training"]["learning_rate"],
+        sampling_rate=args["Training"]["sampling_rate"],
+        device=args["Training"]["device"]
+    )
+    trainer.train(experiment_name=args["Training"]["experiment_name"],
+                run_name=args["Training"]["run_name"])
+    
