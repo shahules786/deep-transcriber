@@ -25,10 +25,10 @@ class Trainer:
         model_dir : str,
         logger:str = "DEBUG"
     ):
-        self.input_size = min_value_check(input_size,0)
-        self.num_layers = min_value_check(num_layers,0)
-        self.hidden_size = min_value_check(hidden_size,0)
-        self.embedding_dim = min_value_check(embedding_dim,0)
+        self.input_size = min_value_check(input_size,0,"input size")
+        self.num_layers = min_value_check(num_layers,0,"number of layers")
+        self.hidden_size = min_value_check(hidden_size,0,"hidden size")
+        self.embedding_dim = min_value_check(embedding_dim,0,"embedding dimension")
 
         self._device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -77,10 +77,10 @@ class Trainer:
         self.train = path_check(train)
         self.test = path_check(test)
 
-        self.batch_size = min_value_check(batch_size,1)
-        self.epochs = min_value_check(epochs,1)
-        self.n_speakers = min_value_check(n_speakers,1)
-        self.n_utterances = min_value_check(n_utterances,1)
+        self.batch_size = min_value_check(batch_size,1,"batch size")
+        self.epochs = min_value_check(epochs,1,"epochs")
+        self.n_speakers = min_value_check(n_speakers,1,"number of speakers")
+        self.n_utterances = min_value_check(n_utterances,1,"number of utterances")
         
         self.lr = lr
 
