@@ -91,7 +91,7 @@ class SincNet(nn.Module):
     def __init__(
         self,
     ):
-        super().__init__()
+        super(SincNet,self).__init__()
 
         self.wave_norm1d = nn.InstanceNorm1d(1,affine=True)
 
@@ -135,7 +135,7 @@ class SincNet(nn.Module):
 
             output = drop(self.activation(norm(pool(output))))
         
-        return output
+        return output.reshape(sample.shape[0],-1,60)
 
 class SegmentNet(nn.Module):
 
@@ -143,9 +143,10 @@ class SegmentNet(nn.Module):
         self,
         
     ):
+        super(SegmentNet,self).__init__()
         self.sincnet = SincNet()
         self.lstm = nn.LSTM(input_size=60, hidden_size=128, num_layers=4, bidirectional=True, dropout=0.0)
-        self.classifier = nn.ModuleList(128*2,4)
+        self.classifier = nn.Linear(128*2,4) ##change 4 to MAX_CLASSES ( can be argument )
         self.activation = nn.Sigmoid()
 
     def forward(
