@@ -6,7 +6,7 @@ import logging
 import numpy as np
 
 from transcriber.tasks.utils import hertz_to_mel, mel_to_hertz
-
+MODEL_OUTPUT_FRAMES = 293 
 class SincConv(nn.Module):
 
     def __init__(
