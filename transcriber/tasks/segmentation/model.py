@@ -14,7 +14,7 @@ class SincConv(nn.Module):
         out_channels:int,
         kernel_size:int,
         inp_channels:int=1,
-        stride:int=1,
+        stride:int=0,
         padding:int=0,
         dilation:int=1,
         freq_low:int=30,
@@ -102,7 +102,8 @@ class SincNet(nn.Module):
 
         self.conv1d.append(
             SincConv(out_channels=80,
-            kernel_size=251)
+            kernel_size=251,
+            stride=10)
         )
         self.pool1d.append(nn.MaxPool1d(3,stride=3,padding=0,dilation=1))
         self.layernorm1d.append(nn.InstanceNorm1d(80,affine=True))
@@ -130,11 +131,14 @@ class SincNet(nn.Module):
                                         self.layernorm1d,self.dropout1d)
         ):
             output = conv(output)
+            print(output.shape)
+
             if i == 0:
                 output = torch.abs(output)
 
             output = drop(self.activation(norm(pool(output))))
-        
+            print(output.shape)
+
         return output.reshape(sample.shape[0],-1,60)
 
 class SegmentNet(nn.Module):
@@ -145,7 +149,7 @@ class SegmentNet(nn.Module):
     ):
         super(SegmentNet,self).__init__()
         self.sincnet = SincNet()
-        self.lstm = nn.LSTM(input_size=60, hidden_size=128, num_layers=4, bidirectional=True, dropout=0.0)
+        self.lstm = nn.LSTM(input_size=60, hidden_size=128, num_layers=1, bidirectional=True, dropout=0.0)
         self.classifier = nn.Linear(128*2,4) ##change 4 to MAX_CLASSES ( can be argument )
         self.activation = nn.Sigmoid()
 
@@ -153,8 +157,10 @@ class SegmentNet(nn.Module):
         self,
         sample
     ):
+        print(sample.shape)
         output = self.sincnet(sample)
         output,_ = self.lstm(output)
+        print("lstm",output.shape)
         output = self.activation(self.classifier(output))
 
         return output
