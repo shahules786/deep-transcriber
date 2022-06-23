@@ -7,8 +7,7 @@ from pyannote.core import Segment
 import math
 
 from transcriber.tasks.utils import softmax,random_generation
-
-RESOLUTION_5SEC = 5000/293
+from transcriber.tasks.segmentation.model import MODEL_OUTPUT_FRAMES
 
 class AMIDataset(IterableDataset):
 
@@ -35,6 +34,8 @@ class AMIDataset(IterableDataset):
                 file[key]=value
             self.data.append(file)
 
+        self.resolution_msec = self.duration/MODEL_OUTPUT_FRAMES
+
     def prepare_chunk(
         self,
         file,
@@ -46,7 +47,7 @@ class AMIDataset(IterableDataset):
         sample["X"] = np.array(audio[math.ceil(start):math.ceil(end)])
         if len(sample["X"].shape)==1:
             sample["X"] = sample["X"].reshape(1,-1)
-        sample['y'] = file['annotation'].discretize(chunk,duration=self.duration,resolution=RESOLUTION_5SEC)
+        sample['y'] = file['annotation'].discretize(chunk,duration=self.duration,resolution=self.resolution_msec)
         return sample
 
     def select_chunk(
