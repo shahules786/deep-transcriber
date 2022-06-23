@@ -13,7 +13,7 @@ def min_value_check(arg,value,name):
     if arg<value:
         raise ValueError(f"{str(name)} should be greater than or equal to {value}")
         
-    return value
+    return arg 
     
 def path_check(path):
 
