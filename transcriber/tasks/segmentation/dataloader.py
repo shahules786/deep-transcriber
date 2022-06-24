@@ -1,4 +1,5 @@
 import itertools
+from matplotlib.pyplot import axis
 from torch.utils.data import IterableDataset
 import numpy as np
 import librosa
@@ -54,7 +55,9 @@ class AMIDataset(IterableDataset):
         self,
         rng
     ):
+        i=0
         while True:
+            i+=1
             file = rng.choices(self.data,
                             weights=[sample['annotated_duration'] for sample in self.data],
                             k=1)[0]
@@ -70,9 +73,9 @@ class AMIDataset(IterableDataset):
         self,
     ):
         rng = random_generation()   ##not reproducible
+        chunks = self.select_chunk(rng)
         while True:
-  
-            chunks = self.select_chunk(rng)
+
             yield next(chunks)
 
     def __iter__(self):
@@ -86,8 +89,26 @@ class AMICollate:
 
     def __init__(
         self,
+        max_num_speakers:int
     ):
-        pass 
+        self.max_num_speakers = max_num_speakers
+
+    def prepare_target(
+        self,
+        target:torch.tensor
+    ):
+        num_speakers = target.shape[-1]
+        max_num_speakers_framelevel = torch.sum(target.sum(1)>0,dim=1)
+        speaker_activity_indices = torch.argsort(target.sum(dim=1),dim=1,descending=True)
+
+        new_target = torch.zeros(target.shape[0],target.shape[1],self.max_num_speakers, 
+                                    dtype=target.dtype, device=target.device)
+
+        for b,indices in enumerate(speaker_activity_indices):
+            for i,index in zip(range(torch.max(max_num_speakers_framelevel)),indices):
+                new_target[b,:,i] = target[b,:,index]
+
+        return new_target
 
     def __call__(
         self,
@@ -107,7 +128,7 @@ class AMICollate:
                 y_batch[b,:,global_idx] = torch.from_numpy(sample["y"].data[:,local_idx])
 
         output["X"] = torch.from_numpy(np.array(output["X"]))
-        output["y"] = y_batch
+        output["y"] = self.prepare_target(y_batch)
           
         return output
     
