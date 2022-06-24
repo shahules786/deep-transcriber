@@ -12,3 +12,5 @@ mlflow==1.23.1
 protobuf==3.19.3
 boto3==1.23.9
 huggingface-hub==0.4.0
+pyannote.core==4.4
+pyannote.database==4.1.3
