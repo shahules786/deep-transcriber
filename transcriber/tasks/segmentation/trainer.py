@@ -22,6 +22,7 @@ class Trainer:
         self,
         protocol:Protocol,
         duration:float=5.0,
+        max_num_speakers=4,
         batch_size:int=16,
         epochs:int=1,
         learning_rate:float=1e-5,
@@ -29,6 +30,7 @@ class Trainer:
         sampling_rate:int=16000
     ):
         self.protocol = protocol
+        self.max_num_speakers = max_num_speakers
         self.duration = min_value_check(duration,1.0,"duration")
         self.batch_size = min_value_check(batch_size,2,"batch size")
         self.epochs = min_value_check(epochs,1,"epochs")
@@ -54,7 +56,7 @@ class Trainer:
         self.experiment_name = experiment_name if not None else "experiment"
         self.run_name = run_name if not None else "run"
 
-        model = SegmentNet().to(self.device)
+        model = SegmentNet(self.max_num_speakers).to(self.device)
         optimizer = Adam(lr=self.learning_rate,params=model.parameters())
         bce_loss = losses(loss="bce")
         Perumtation_bce = PermutationInvarientTraining(loss="bce")
@@ -74,7 +76,7 @@ class Trainer:
                         model=model,data=data,optimizer=optimizer,
                         loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
                     )
-                    loss_dict[phase].append(batch_loss_dict["total_loss"])
+                    loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
                 
                 phase = "developement"
                 for batch,data in enumerate(dataloaders["train"]):
@@ -82,7 +84,7 @@ class Trainer:
                         model=model,data=data,optimizer=optimizer,
                         loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
                     )
-                    loss_dict[phase].append(batch_loss_dict["total_loss"])
+                    loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
 
                 logging.info(f"Train loss epoch {epoch} : {np.mean(loss_dict['train'])}")
                 logging.info(f"Valid loss epoch {epoch} : {np.mean(loss_dict['developement'])}")
@@ -107,29 +109,28 @@ class Trainer:
         else:
             model.eval()
 
-        input_waveform, target = data.values()
-        prediction = model(input_waveform)
-        min_weight_perumuation, _ = Permutation(prediction,target.data)
-        seg_loss = loss_obj.segmentation_loss(min_weight_perumuation,target.data)
-        vad_loss = loss_obj.vad_loss(min_weight_perumuation,target.data)
-        loss = seg_loss + vad_loss
+        with torch.set_grad_enabled(phase == "train"):
+            input_waveform, target = data.values()
+            prediction = model(input_waveform)
+            min_weight_perumuation, _ = Permutation(target.data,prediction)
+            seg_loss = loss_obj.segmentation_loss(min_weight_perumuation,target.data)
+            vad_loss = loss_obj.vad_loss(min_weight_perumuation,target.data)
+            loss = seg_loss + vad_loss
 
-        if phase == "train":
+            if phase == "train":
                 loss.backward()
                 optimizer.step()
-        else:
-            pass
 
-
-        return {"prediction":prediction,
+        return (prediction.cpu(),
+                {
                 "loss":{"seg_loss":seg_loss.item(),"vad_loss":vad_loss.item(),
                         "total_loss":loss.item()}
-                }
+                })
 
     def _prepare_dataloaders(
         self
     ):
-        collate_fn = AMICollate()
+        collate_fn = AMICollate(max_num_speakers=self.max_num_speakers)
         train_dataset = AMIDataset(protocol=self.protocol,duration=self.duration,
                             sampling_rate=self.sampling_rate,phase="train")
         train_dataset = DataLoader(train_dataset,batch_size=self.batch_size,collate_fn=collate_fn)
@@ -164,6 +165,7 @@ if __name__ == "__main__":
     trainer = Trainer(
         protocol=protocol,
         duration=args["Training"]["duration"],
+        max_num_speakers=args["Training"]["max_num_speakers"],
         batch_size=args["Training"]["batch_size"],
         epochs=args["Training"]['epochs'],
         learning_rate=args["Training"]["learning_rate"],
