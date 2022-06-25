@@ -1,11 +1,10 @@
 import itertools
-from matplotlib.pyplot import axis
-from torch.utils.data import IterableDataset
 import numpy as np
 import librosa
 import torch
-from pyannote.core import Segment
 import math
+from torch.utils.data import IterableDataset
+from pyannote.core import Segment
 
 from transcriber.tasks.utils import softmax,random_generation
 from transcriber.tasks.segmentation.model import MODEL_OUTPUT_FRAMES
