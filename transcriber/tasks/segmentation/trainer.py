@@ -72,11 +72,12 @@ class Trainer:
 
                 phase = "train"
                 for batch,data in enumerate(dataloaders["train"]):
-                    predition,batch_loss_dict = self._run_single_batch(
-                        model=model,data=data,optimizer=optimizer,
-                        loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
-                    )
-                    loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
+                    if data["y"].shape[-1] <= self.max_num_speakers:
+                        predition,batch_loss_dict = self._run_single_batch(
+                            model=model,data=data,optimizer=optimizer,
+                            loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
+                        )
+                        loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
                 
                 phase = "developement"
                 for batch,data in enumerate(dataloaders["train"]):
