@@ -109,7 +109,6 @@ class AMICollate:
             for i,index in zip(range(max_speakers_batch),indices):
                 new_target[b,:,i] = target[b,:,index]
 
-        print(new_target.shape)
         return new_target
 
     def __call__(
