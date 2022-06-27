@@ -98,15 +98,18 @@ class AMICollate:
     ):
         num_speakers = target.shape[-1]
         max_num_speakers_framelevel = torch.sum(target.sum(1)>0,dim=1)
+        max_speakers_batch = torch.max(max_num_speakers_framelevel)
         speaker_activity_indices = torch.argsort(target.sum(dim=1),dim=1,descending=True)
 
-        new_target = torch.zeros(target.shape[0],target.shape[1],self.max_num_speakers, 
+        new_target = torch.zeros(target.shape[0],target.shape[1],
+                                max(self.max_num_speakers,max_speakers_batch), 
                                     dtype=target.dtype, device=target.device)
 
         for b,indices in enumerate(speaker_activity_indices):
-            for i,index in zip(range(torch.max(max_num_speakers_framelevel)),indices):
+            for i,index in zip(range(max_speakers_batch),indices):
                 new_target[b,:,i] = target[b,:,index]
 
+        print(new_target.shape)
         return new_target
 
     def __call__(
