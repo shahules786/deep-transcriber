@@ -1,5 +1,5 @@
 Data:
-  database : /scratch/c.sistc3/AMI-diarization-setup/pyannote/amicorpus/pyannotate/database.yml
+  database : /scratch/c.sistc3/AMI-diarization-setup/pyannote/database.yml
 
 Training:
   duration : 5
