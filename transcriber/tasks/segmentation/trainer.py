@@ -66,32 +66,38 @@ class Trainer:
         if not experiment:
             experiment = mlflow.set_experiment(self.experiment_name)
         with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=self.run_name):
-
+            num_train_batches = int(dataloaders["train"].dataset.__len__()//self.batch_size)
+            num_dev_batches = int(dataloaders["development"].dataset.__len__()//self.batch_size)
             for epoch in range(self.epochs):
-                loss_dict = {"train":[],"developement":[]}
+                loss_dict = {"train":[],"development":[]}
 
                 phase = "train"
-                for batch,data in enumerate(dataloaders["train"]):
+                for batch_num,data in zip(range(num_train_batches), dataloaders[phase]):
                     if data["y"].shape[-1] <= self.max_num_speakers:
                         predition,batch_loss_dict = self._run_single_batch(
                             model=model,data=data,optimizer=optimizer,
                             loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
                         )
                         loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
+                        mlflow.log_metrics({"Train Loss":batch_loss_dict["loss"]["total_loss"]},step=batch_num)
+
+                        
                 
-                phase = "developement"
-                for batch,data in enumerate(dataloaders["train"]):
+                phase = "development"
+                for batch_num,data in zip(range(num_dev_batches),dataloaders[phase]):
                     predition,batch_loss_dict = self._run_single_batch(
                         model=model,data=data,optimizer=optimizer,
                         loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
                     )
                     loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
+                    mlflow.log_metrics({"Valid Loss":batch_loss_dict["loss"]["total_loss"]},step=batch_num)
+
 
                 logging.info(f"Train loss epoch {epoch} : {np.mean(loss_dict['train'])}")
-                logging.info(f"Valid loss epoch {epoch} : {np.mean(loss_dict['developement'])}")
+                logging.info(f"Valid loss epoch {epoch} : {np.mean(loss_dict['development'])}")
                 
-                mlflow.log_metrics({"Train Loss":np.mean(loss_dict['train'])},step=epoch)
-                mlflow.log_metrics({"Valid Loss":np.mean(loss_dict['developement'])},step=epoch)
+                mlflow.log_metrics({"Train Loss Epochs":np.mean(loss_dict['train'])},step=epoch)
+                mlflow.log_metrics({"Valid Loss Epochs":np.mean(loss_dict['development'])},step=epoch)
 
                     
     def _run_single_batch(
@@ -138,7 +144,7 @@ class Trainer:
 
         dev_dataset = AMIDataset(protocol=self.protocol,duration=self.duration,
                             sampling_rate=self.sampling_rate,phase="development")
-        dev_dataset = DataLoader(train_dataset,batch_size=self.batch_size,collate_fn=collate_fn)
+        dev_dataset = DataLoader(dev_dataset,batch_size=self.batch_size,collate_fn=collate_fn)
 
         return {"train":train_dataset,
                 "development":dev_dataset}
