@@ -79,6 +79,7 @@ class Trainer:
                             loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
                         )
                         loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
+                        print(f'Train loss {batch_num} : {batch_loss_dict["loss"]["total_loss"]}')
                         mlflow.log_metrics({"Train Loss":batch_loss_dict["loss"]["total_loss"]},step=batch_num)
 
                         
@@ -90,6 +91,7 @@ class Trainer:
                         loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
                     )
                     loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
+                    print(f'Valid loss {batch_num} : {batch_loss_dict["loss"]["total_loss"]}')
                     mlflow.log_metrics({"Valid Loss":batch_loss_dict["loss"]["total_loss"]},step=batch_num)
 
 
