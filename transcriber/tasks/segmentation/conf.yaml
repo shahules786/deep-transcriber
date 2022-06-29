@@ -6,7 +6,7 @@ Training:
   max_num_speakers : 4
   batch_size : 32
   epochs : 1
-  learning_rate : 0.0001
+  learning_rate : 0.001
   sampling_rate : 16000
   device : cpu
   experiment_name : Speaker-Segmentation
