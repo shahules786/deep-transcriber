@@ -15,6 +15,8 @@ from transcriber.tasks.segmentation.loss import PermutationInvarientTraining, lo
 from transcriber.tasks.segmentation.dataloader import AMIDataset,AMICollate
 from transcriber.tasks.segmentation.model import SegmentNet
 
+logging.getLogger().setLevel(logging.INFO)
+
 
 class Trainer:
 
@@ -79,7 +81,7 @@ class Trainer:
                             loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
                         )
                         loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
-                        print(f'Train loss {batch_num} : {batch_loss_dict["loss"]["total_loss"]}')
+                        logging.info(f'Train loss {batch_num} : {batch_loss_dict["loss"]["total_loss"]}')
                         mlflow.log_metrics({"Train Loss":batch_loss_dict["loss"]["total_loss"]},step=batch_num)
 
                         
@@ -91,7 +93,7 @@ class Trainer:
                         loss_obj=bce_loss,Permutation=Perumtation_bce,phase=phase
                     )
                     loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
-                    print(f'Valid loss {batch_num} : {batch_loss_dict["loss"]["total_loss"]}')
+                    logging.info(f'Valid loss {batch_num} : {batch_loss_dict["loss"]["total_loss"]}')
                     mlflow.log_metrics({"Valid Loss":batch_loss_dict["loss"]["total_loss"]},step=batch_num)
 
 
