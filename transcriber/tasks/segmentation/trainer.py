@@ -70,6 +70,9 @@ class Trainer:
         with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=self.run_name):
             num_train_batches = int(dataloaders["train"].dataset.__len__()//self.batch_size)
             num_dev_batches = int(dataloaders["development"].dataset.__len__()//self.batch_size)
+            logging.info(f"Number of train steps per epoch = {num_dev_batches}")
+            logging.info(f"Number of validation steps per epoch = {num_dev_batches}")
+
             for epoch in range(self.epochs):
                 loss_dict = {"train":[],"development":[]}
 
