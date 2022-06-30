@@ -16,23 +16,25 @@ class AMIDataset(IterableDataset):
         protocol,
         duration=2,
         sampling_rate=16000,
-        phase="train"
+        phase="train",
+        max_segment_sec=600
     ):
 
         self.sampling_rate = sampling_rate
         self.duration = duration
+        self.max_segment_sec = max_segment_sec + duration
         self.data=[]
         for train_sample in getattr(protocol,phase)():
-            file = dict()
-            for key,value in train_sample.items():
-                if key=="annotated":
-                    value = [segment for segment in value if segment.duration>self.duration]
-                    file['annotated_duration'] = sum([segment.duration for segment in value])
-                else:
-                    pass
-                    
-                file[key]=value
-            self.data.append(file)
+                file = dict()
+                for key,value in train_sample.items():
+                    if key=="annotated":
+                        value = [segment for segment in value if segment.duration>self.duration]
+                        file['annotated_duration'] = sum([segment.duration for segment in value])
+                    else:
+                        pass
+                        
+                    file[key]=value
+                self.data.append(file)
 
         self.resolution_msec = self.duration/MODEL_OUTPUT_FRAMES
 
@@ -63,8 +65,7 @@ class AMIDataset(IterableDataset):
             segment = rng.choices(file['annotated'],
                                 weights=[segment.duration for segment in file['annotated']],
                                 k=1)[0]
-            
-            start_time = rng.uniform(segment.start,segment.end-self.duration)
+            start_time = rng.uniform(segment.start,(self.max_segment_sec,segment.end-self.duration))
             chunk = Segment(start_time,start_time+self.duration)
             yield self.prepare_chunk(file,chunk)
 
@@ -81,7 +82,7 @@ class AMIDataset(IterableDataset):
         return self.__iter__helper()
 
     def __len__(self):
-        return sum([file["annotated_duration"] for file in self.data])//self.duration
+        return (self.max_segment_sec*len(self.data))//self.duration
 
     
 class AMICollate:
