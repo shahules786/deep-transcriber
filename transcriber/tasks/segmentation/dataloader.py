@@ -65,7 +65,7 @@ class AMIDataset(IterableDataset):
             segment = rng.choices(file['annotated'],
                                 weights=[segment.duration for segment in file['annotated']],
                                 k=1)[0]
-            start_time = rng.uniform(segment.start,(self.max_segment_sec,segment.end-self.duration))
+            start_time = rng.uniform(segment.start,min(self.max_segment_sec,segment.end-self.duration))
             chunk = Segment(start_time,start_time+self.duration)
             yield self.prepare_chunk(file,chunk)
 
