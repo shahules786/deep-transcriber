@@ -40,20 +40,20 @@ class PermutationInvarientTraining:
                         for i in range(num_classes_y1)]
                 )
 
-        if num_classes_y1<num_classes_y2:
-            pad = (0,0,0,num_classes_y2-num_classes_y1)
-            cost_matrix = F.pad(
-                    cost_matrix,
-                    pad,
-                    torch.max(cost_matrix)+1
-            )
+            if num_classes_y1<num_classes_y2:
+                pad = (0,0,0,num_classes_y2-num_classes_y1)
+                cost_matrix = F.pad(
+                        input=cost_matrix,
+                        pad=pad,
+                        value=torch.max(cost_matrix)+1
+                )
 
-        permutation = [None] * num_classes_y1
-        for k1,k2 in zip(*linear_sum_assignment(cost_matrix.cpu())):
-            if k1<=num_classes_y1:
-                permutated_y2[b,:,k1] = y2_[:,k2]
-                permutation[k1] = k2
-            permutations.append(tuple(permutation))
+            permutation = [None] * num_classes_y1
+            for k1,k2 in zip(*linear_sum_assignment(cost_matrix.cpu())):
+                if k1<num_classes_y1:
+                    permutated_y2[b,:,k1] = y2_[:,k2]
+                    permutation[k1] = k2
+                permutations.append(tuple(permutation))
 
         return permutated_y2, permutations
 
