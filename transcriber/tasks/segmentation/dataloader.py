@@ -103,13 +103,12 @@ class AMICollate:
         speaker_activity_indices = torch.argsort(target.sum(dim=1),dim=1,descending=True)
 
         new_target = torch.zeros(target.shape[0],target.shape[1],
-                                max(self.max_num_speakers,max_speakers_batch), 
+                                    max_speakers_batch, 
                                     dtype=target.dtype, device=target.device)
 
         for b,indices in enumerate(speaker_activity_indices):
             for i,index in zip(range(max_speakers_batch),indices):
                 new_target[b,:,i] = target[b,:,index]
-
         return new_target
 
     def __call__(
