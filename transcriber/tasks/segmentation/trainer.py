@@ -3,6 +3,7 @@ from pyannote.database import Protocol
 from typing import Optional
 from torch.utils.data import DataLoader
 from torch.optim import Adam
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 import mlflow 
 import logging
 import numpy as np
@@ -60,6 +61,7 @@ class Trainer:
 
         model = SegmentNet(self.max_num_speakers).to(self.device)
         optimizer = Adam(lr=self.learning_rate,params=model.parameters())
+        scheduler = ReduceLROnPlateau(optimizer=optimizer,model="min",factor=0.5,patience=1)
         bce_loss = losses(loss="bce")
         Perumtation_bce = PermutationInvarientTraining(loss="bce")
         dataloaders = self._prepare_dataloaders()
@@ -70,7 +72,7 @@ class Trainer:
         with mlflow.start_run(experiment_id=experiment.experiment_id, run_name=self.run_name):
             num_train_batches = int(dataloaders["train"].dataset.__len__()//self.batch_size)
             num_dev_batches = int(dataloaders["development"].dataset.__len__()//self.batch_size)
-            logging.info(f"Number of train steps per epoch = {num_dev_batches}")
+            logging.info(f"Number of train steps per epoch = {num_train_batches}")
             logging.info(f"Number of validation steps per epoch = {num_dev_batches}")
 
             for epoch in range(self.epochs):
@@ -98,7 +100,7 @@ class Trainer:
                     loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
                     logging.info(f'Valid loss {batch_num} : {batch_loss_dict["loss"]["total_loss"]}')
                     mlflow.log_metrics({"Valid Loss":batch_loss_dict["loss"]["total_loss"]},step=batch_num)
-
+                scheduler.step(np.mean(loss_dict['development']))
 
                 logging.info(f"Train loss epoch {epoch} : {np.mean(loss_dict['train'])}")
                 logging.info(f"Valid loss epoch {epoch} : {np.mean(loss_dict['development'])}")
