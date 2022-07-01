@@ -61,7 +61,7 @@ class Trainer:
 
         model = SegmentNet(self.max_num_speakers).to(self.device)
         optimizer = Adam(lr=self.learning_rate,params=model.parameters())
-        scheduler = ReduceLROnPlateau(optimizer=optimizer,model="min",factor=0.5,patience=1)
+        scheduler = ReduceLROnPlateau(optimizer=optimizer,mode="min",factor=0.5,patience=1)
         bce_loss = losses(loss="bce")
         Perumtation_bce = PermutationInvarientTraining(loss="bce")
         dataloaders = self._prepare_dataloaders()
