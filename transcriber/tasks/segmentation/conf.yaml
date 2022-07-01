@@ -4,8 +4,8 @@ Data:
 Training:
   duration : 5
   max_num_speakers : 4
-  batch_size : 32
-  epochs : 1
+  batch_size : 128
+  epochs : 5
   learning_rate : 0.001
   sampling_rate : 16000
   device : cpu
