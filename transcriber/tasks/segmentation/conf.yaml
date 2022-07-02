@@ -1,5 +1,5 @@
 Data:
-  database : /Users/shahules/Myprojects/AMI-diarization-setup/pyannote/database.yml
+  database : /scratch/c.sistc3/AMI-diarization-setup/pyannote/database.yml
 
 Training:
   duration : 5
