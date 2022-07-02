@@ -20,6 +20,7 @@ class AMIDataset(IterableDataset):
         max_segment_sec=600
     ):
 
+        self.phase = phase
         self.sampling_rate = sampling_rate
         self.duration = duration
         self.max_segment_sec = max_segment_sec + duration
@@ -82,7 +83,10 @@ class AMIDataset(IterableDataset):
         return self.__iter__helper()
 
     def __len__(self):
-        return (self.max_segment_sec*len(self.data))//self.duration
+        if self.phase == "train":
+            return (self.max_segment_sec*len(self.data))//self.duration
+            
+        return sum([file["annotated_duration"] for file in self.data])//self.duration
 
     
 class AMICollate:
