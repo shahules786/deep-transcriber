@@ -11,7 +11,7 @@ import yaml
 import os
 
 
-from transcriber.tasks.utils import min_value_check
+from transcriber.tasks.utils import min_value_check, EarlyStopping
 from transcriber.tasks.segmentation.loss import PermutationInvarientTraining, losses
 from transcriber.tasks.segmentation.dataloader import AMIDataset,AMICollate
 from transcriber.tasks.segmentation.model import SegmentNet
@@ -62,6 +62,7 @@ class Trainer:
         model = SegmentNet(self.max_num_speakers).to(self.device)
         optimizer = Adam(lr=self.learning_rate,params=model.parameters())
         scheduler = ReduceLROnPlateau(optimizer=optimizer,mode="min",factor=0.5,patience=1)
+        early_stopping = EarlyStopping(patience=3,mode="min",filename="segmentation.pth")
         bce_loss = losses(loss="bce")
         Perumtation_bce = PermutationInvarientTraining(loss="bce")
         dataloaders = self._prepare_dataloaders()
@@ -101,12 +102,15 @@ class Trainer:
                     logging.info(f'Valid loss {batch_num} : {batch_loss_dict["loss"]["total_loss"]}')
                     mlflow.log_metrics({"Valid Loss":batch_loss_dict["loss"]["total_loss"]},step=batch_num)
                 scheduler.step(np.mean(loss_dict['development']))
+                early_stopping(np.mean(loss_dict['development']),model)
 
                 logging.info(f"Train loss epoch {epoch} : {np.mean(loss_dict['train'])}")
                 logging.info(f"Valid loss epoch {epoch} : {np.mean(loss_dict['development'])}")
                 
                 mlflow.log_metrics({"Train Loss Epochs":np.mean(loss_dict['train'])},step=epoch)
                 mlflow.log_metrics({"Valid Loss Epochs":np.mean(loss_dict['development'])},step=epoch)
+                if early_stopping.early_stop:
+                    break
 
                     
     def _run_single_batch(
