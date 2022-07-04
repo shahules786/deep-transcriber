@@ -75,7 +75,8 @@ class Trainer:
             num_dev_batches = int(dataloaders["development"].dataset.__len__()//self.batch_size)
             logging.info(f"Number of train steps per epoch = {num_train_batches}")
             logging.info(f"Number of validation steps per epoch = {num_dev_batches}")
-
+            train_steps_completed = 0
+            valid_steps_completed = 0
             for epoch in range(self.epochs):
                 loss_dict = {"train":[],"development":[]}
 
@@ -88,7 +89,8 @@ class Trainer:
                         )
                         loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
                         logging.info(f'Train loss {batch_num} : {batch_loss_dict["loss"]["total_loss"]}')
-                        mlflow.log_metrics({"Train Loss":batch_loss_dict["loss"]["total_loss"]},step=batch_num)
+                        mlflow.log_metrics({"Train Loss":batch_loss_dict["loss"]["total_loss"]},step=train_steps_completed)
+                        train_steps_completed += 1
 
                         
                 
@@ -100,7 +102,8 @@ class Trainer:
                     )
                     loss_dict[phase].append(batch_loss_dict["loss"]["total_loss"])
                     logging.info(f'Valid loss {batch_num} : {batch_loss_dict["loss"]["total_loss"]}')
-                    mlflow.log_metrics({"Valid Loss":batch_loss_dict["loss"]["total_loss"]},step=batch_num)
+                    mlflow.log_metrics({"Valid Loss":batch_loss_dict["loss"]["total_loss"]},step=valid_steps_completed)
+                    valid_steps_completed += 1
                 scheduler.step(np.mean(loss_dict['development']))
                 early_stopping(np.mean(loss_dict['development']),model)
 
