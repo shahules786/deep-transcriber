@@ -72,7 +72,7 @@ def random_generation():
 
 class EarlyStopping:
 
-    def __init_(
+    def __init__(
         self,
         patience:int=10,
         mode="min",
