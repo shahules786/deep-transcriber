@@ -72,11 +72,12 @@ def random_generation():
 
 class EarlyStopping:
 
-    def __init__(
+    def __init_(
         self,
         patience:int=10,
         mode="min",
-        filename="model.pth"
+        filename="model.pth",
+        directory="./model"
 
     ):
         self.patience = patience 
@@ -87,7 +88,14 @@ class EarlyStopping:
             raise ValueError("mode must be either 'min' or 'max'")
         self.best_loss = None
         self.early_stop = False
-        self.filename = filename
+        if not os.path.exists(directory):
+            logging.info("CREATING DIR TO SAVE MODEL...")
+            os.mkdir(directory)
+
+        self.filepath = os.path.join(directory,filename)
+
+        
+
 
 
     def __call__(
@@ -121,7 +129,7 @@ class EarlyStopping:
         self,
         model
     ):
-        torch.save(model.state_dict(),self.filename)
+        torch.save(model.state_dict(),self.filepath)
 
 
 
