@@ -116,7 +116,7 @@ class Trainer:
                 mlflow.log_metrics({"Valid Loss Epochs":np.mean(loss_dict['development'])},step=epoch)
                 if early_stopping.early_stop:
                     break
-                mlflow.log_artifact(early_stopping.filename)
+                mlflow.log_artifact(early_stopping.filepath)
 
 
                     
