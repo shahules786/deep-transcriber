@@ -11,4 +11,5 @@ Training:
   device : cpu
   experiment_name : Speaker-Segmentation
   run_name : Baseline
+  model_dir: './model/'
   
