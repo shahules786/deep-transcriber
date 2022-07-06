@@ -11,7 +11,7 @@ import yaml
 import os
 
 
-from transcriber.tasks.utils import min_value_check, EarlyStopping
+from transcriber.tasks.utils import min_value_check, path_check, EarlyStopping
 from transcriber.tasks.segmentation.loss import PermutationInvarientTraining, losses
 from transcriber.tasks.segmentation.dataloader import AMIDataset,AMICollate
 from transcriber.tasks.segmentation.model import SegmentNet
@@ -30,7 +30,8 @@ class Trainer:
         epochs:int=1,
         learning_rate:float=1e-5,
         device:str="cpu",
-        sampling_rate:int=16000
+        sampling_rate:int=16000,
+        model_dir="./model"
     ):
         self.protocol = protocol
         self.max_num_speakers = max_num_speakers
@@ -39,6 +40,7 @@ class Trainer:
         self.epochs = min_value_check(epochs,1,"epochs")
         self.learning_rate = learning_rate
         self.sampling_rate = sampling_rate
+        self.model_dir = model_dir
 
         if device not in ("cpu","cuda"):
             raise ValueError("device should be cpu or cuda")
@@ -62,7 +64,7 @@ class Trainer:
         model = SegmentNet(self.max_num_speakers).to(self.device)
         optimizer = Adam(lr=self.learning_rate,params=model.parameters())
         scheduler = ReduceLROnPlateau(optimizer=optimizer,mode="min",factor=0.5,patience=1)
-        early_stopping = EarlyStopping(patience=3,mode="min",filename="segmentation.pth")
+        early_stopping = EarlyStopping(patience=3,mode="min",filename="segmentation.pth",directory=self.model_dir)
         bce_loss = losses(loss="bce")
         Perumtation_bce = PermutationInvarientTraining(loss="bce")
         dataloaders = self._prepare_dataloaders()
@@ -195,7 +197,8 @@ if __name__ == "__main__":
         epochs=args["Training"]['epochs'],
         learning_rate=args["Training"]["learning_rate"],
         sampling_rate=args["Training"]["sampling_rate"],
-        device=args["Training"]["device"]
+        device=args["Training"]["device"],
+        model_dir=args["Training"]["model_dir"]
     )
     trainer.train(experiment_name=args["Training"]["experiment_name"],
                 run_name=args["Training"]["run_name"])
