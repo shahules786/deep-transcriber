@@ -106,6 +106,7 @@ class EarlyStopping:
     ):
         if self.best_loss == None:
             self.best_loss = loss
+            self.save_checkpoint(model)
         else:
             if self.mode == "min":
                 if loss < self.best_loss:
@@ -129,6 +130,7 @@ class EarlyStopping:
         self,
         model
     ):
+        logging.info(f"SAVING MODEL...{self.best_loss : .2f}")
         torch.save(model.state_dict(),self.filepath)
 
 
