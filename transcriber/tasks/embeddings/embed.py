@@ -3,7 +3,7 @@ import torch
 import json
 
 from transcriber.tasks.embeddings.model import Embeder
-from transcriber.tasks.utils import load_file_hf
+from transcriber.utils import load_file_hf
 
 class PretrainedEmbeder:
 

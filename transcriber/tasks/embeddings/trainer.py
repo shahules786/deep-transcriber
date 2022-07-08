@@ -10,7 +10,7 @@ from torch.optim import Adam,SGD
 
 from transcriber.tasks.embeddings.dataloader import TimitDataset,TimitCollate
 from transcriber.tasks.embeddings.model import Embeder
-from transcriber.tasks.utils import min_value_check, path_check
+from transcriber.utils import min_value_check, path_check
 from transcriber.tasks.embeddings.loss import Ge2eLoss, equal_error_rate
 
 
