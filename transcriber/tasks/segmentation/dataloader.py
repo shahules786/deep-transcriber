@@ -6,7 +6,7 @@ import math
 from torch.utils.data import IterableDataset
 from pyannote.core import Segment
 
-from transcriber.tasks.utils import softmax,random_generation
+from transcriber.utils import random_generation
 from transcriber.tasks.segmentation.model import MODEL_OUTPUT_FRAMES
 
 class AMIDataset(IterableDataset):
@@ -85,7 +85,7 @@ class AMIDataset(IterableDataset):
     def __len__(self):
         if self.phase == "train":
             return (self.max_segment_sec*len(self.data))//self.duration
-            
+
         return sum([file["annotated_duration"] for file in self.data])//self.duration
 
     

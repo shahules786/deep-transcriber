@@ -11,7 +11,8 @@ import yaml
 import os
 
 
-from transcriber.tasks.utils import min_value_check, path_check, EarlyStopping
+from transcriber.utils import min_value_check, path_check
+from transcriber.utils.callbacks import EarlyStopping
 from transcriber.tasks.segmentation.loss import PermutationInvarientTraining, losses
 from transcriber.tasks.segmentation.dataloader import AMIDataset,AMICollate
 from transcriber.tasks.segmentation.model import SegmentNet

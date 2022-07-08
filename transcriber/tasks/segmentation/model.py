@@ -4,7 +4,7 @@ import torch
 import logging
 import numpy as np
 
-from transcriber.tasks.utils import hertz_to_mel, mel_to_hertz
+from transcriber.utils import hertz_to_mel, mel_to_hertz
 MODEL_OUTPUT_FRAMES = 293 
 class SincConv(nn.Module):
 
