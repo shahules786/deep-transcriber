@@ -3,17 +3,20 @@ import librosa
 from typing import Optional
 from matplotlib.pyplot import axis
 import numpy as np
+import torch
 
 class Audio:
 
     def __init__(
         self,
         sampling_rate:int=16000,
-        mono:bool=True
+        mono:bool=True,
+        return_tensor=True
     ) -> None:
         
         self.sampling_rate = sampling_rate
         self.mono = mono
+        self.return_tensor = return_tensor
 
     def __call__(
         self,
@@ -34,7 +37,11 @@ class Audio:
         if self.mono:
             audio = self.convert_mono(audio)
 
-        return self.resample_audio(audio,sampling_rate)
+        resampled_audio =  self.resample_audio(audio,sampling_rate)
+        if self.return_tensor:
+            return torch.tensor(resampled_audio)
+        else:
+            return resampled_audio
 
     def convert_mono(
         self,
